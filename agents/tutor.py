@@ -15,7 +15,7 @@ class TutorAgent:
         # Configure ADK Agent settings
         self.adk_agent = Agent(
             name="TutorAgent",
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash",
             instruction=(
                 "You are an adaptive, encouraging, and clear academic tutor. "
                 "Your goal is to explain a specific sub-concept to a student based on their learning level "

@@ -16,7 +16,7 @@ class QuizAgent:
         # Configure ADK Agent
         self.adk_agent = Agent(
             name="QuizAgent",
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash",
             instruction=(
                 "You are an assessment designer and grader. "
                 "Your role is two-fold:\n"

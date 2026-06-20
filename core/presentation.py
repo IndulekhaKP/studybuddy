@@ -201,12 +201,12 @@ def generate_html_slides(slides_data: list[dict]) -> str:
             if (Array.isArray(slide.points)) {{
                 pointsHtml = "<ul>" + slide.points.map(p => `<li>${{p}}</li>`).join("") + "</ul>";
             }} else if (slide.content) {{
-                pointsHtml = `<p>${slide.content}</p>`;
+                pointsHtml = `<p>${{slide.content}}</p>`;
             }}
             
             slideEl.innerHTML = `
-                <h2 class="slide-title">${slide.title}</h2>
-                <div class="slide-content">${pointsHtml}</div>
+                <h2 class="slide-title">${{slide.title}}</h2>
+                <div class="slide-content">${{pointsHtml}}</div>
             `;
             wrapper.appendChild(slideEl);
         }});
@@ -221,7 +221,7 @@ def generate_html_slides(slides_data: list[dict]) -> str:
                     slide.classList.remove("active");
                 }}
             }});
-            counter.innerText = `${currentSlide + 1} / ${slides.length}`;
+            counter.innerText = `${{currentSlide + 1}} / ${{slides.length}}`;
         }}
         
         prevBtn.addEventListener("click", () => {{

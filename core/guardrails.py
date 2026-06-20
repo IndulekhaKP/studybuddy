@@ -52,7 +52,7 @@ def is_educational_and_safe(text: str) -> tuple[bool, str]:
         from core.gemini_client import generate_content_with_retry
         response = generate_content_with_retry(
             client=client,
-            model='gemini-2.5-flash',
+            model='gemini-2.0-flash',
             contents=f"User request: '{cleaned_text}'",
             config=types.GenerateContentConfig(
                 system_instruction=system_instruction,

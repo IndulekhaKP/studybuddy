@@ -17,7 +17,7 @@ class PlannerAgent:
         # We define a google-adk Agent to encapsulate the persona and parameters
         self.adk_agent = Agent(
             name="PlannerAgent",
-            model="gemini-2.5-flash",
+            model="gemini-2.0-flash",
             instruction=(
                 "You are an academic curriculum planner. Given a topic, break it down into an ordered "
                 "JSON list of 3 to 6 atomic, sequential sub-concepts (from easiest/foundation to hardest/advanced) "

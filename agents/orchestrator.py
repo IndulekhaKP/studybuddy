@@ -105,7 +105,7 @@ class StudyBuddyOrchestrator:
                 from core.gemini_client import generate_content_with_retry
                 response = generate_content_with_retry(
                     client=client,
-                    model="gemini-2.5-flash",
+                    model="gemini-2.0-flash",
                     contents=prompt
                 )
                 curriculum_notes = response.text.strip()

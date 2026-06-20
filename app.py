@@ -311,20 +311,23 @@ else:
 
 # Safety check for Gemini API key
 api_key = os.getenv("GEMINI_API_KEY")
-if not api_key:
-    st.warning("⚠️ GEMINI_API_KEY environment variable not found in .env.")
-    api_key_input = st.text_input("Please enter your Gemini API Key to run the app:", type="password")
-    if api_key_input:
+_is_placeholder = not api_key or api_key.strip() == "your_gemini_api_key_here" or not api_key.strip().startswith("AIza")
+if _is_placeholder:
+    st.warning("⚠️ A valid GEMINI_API_KEY was not found. Please enter your key below.")
+    api_key_input = st.text_input("Enter your Gemini API Key:", type="password", placeholder="AIzaSy...")
+    if api_key_input and api_key_input.strip().startswith("AIza"):
         try:
             with open(".env", "w") as f:
-                f.write(f"GEMINI_API_KEY={api_key_input}\n")
-            os.environ["GEMINI_API_KEY"] = api_key_input
-            st.success("API Key saved to .env and loaded successfully!")
+                f.write(f"GEMINI_API_KEY={api_key_input.strip()}\n")
+            os.environ["GEMINI_API_KEY"] = api_key_input.strip()
+            st.success("✅ API Key saved to .env and loaded successfully!")
         except Exception:
-            os.environ["GEMINI_API_KEY"] = api_key_input
-            st.success("API Key loaded successfully for this session!")
+            os.environ["GEMINI_API_KEY"] = api_key_input.strip()
+            st.success("✅ API Key loaded successfully for this session!")
         st.rerun()
-    st.info("Tip: You can copy `.env.example` to `.env` and fill in your key to avoid this prompt.")
+    elif api_key_input:
+        st.error("❌ That doesn't look like a valid Gemini API key. It should start with 'AIza'.")
+    st.info("💡 Get a free key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)")
     st.stop()
 
 # Now import orchestrator and guardrails safely
