@@ -79,6 +79,65 @@ class QuizAgent:
             }
             return json.dumps(fallback)
 
+    def generate_questions_batch(self, subconcept: str, level: str, explanation: str, n: int = 3) -> list:
+        """Generates a batch of 2-3 MCQ questions for a subconcept.
+        
+        Args:
+            subconcept: The title of the concept.
+            level: The student's level ('beginner' or 'intermediate').
+            explanation: The exact explanation the tutor agent just generated.
+            n: Number of questions to generate (2 or 3).
+        Returns:
+            List of question dicts, each with: question, options, correct_index, explanation
+        """
+        from google.genai import types
+        
+        prompt = (
+            f"Generate exactly {n} multiple-choice questions (MCQs) to test the student's "
+            f"understanding of the concept '{subconcept}' at a {level} level.\n"
+            f"Grounding context (explanation given to student):\n{explanation}\n\n"
+            f"Requirements:\n"
+            f"- The response must be a JSON array containing exactly {n} objects.\n"
+            f"- Each object must contain exactly 4 keys:\n"
+            f"  1. 'question': the question text string.\n"
+            f"  2. 'options': a list of exactly 4 choices (strings).\n"
+            f"  3. 'correct_index': integer index (0, 1, 2, or 3) of the correct option.\n"
+            f"  4. 'explanation': a clear, friendly explanation of the correct answer.\n"
+            f"- Make questions distinct - test different aspects of the concept.\n"
+            f"- Do not write any markdown code blocks. Return only the raw JSON array."
+        )
+        
+        try:
+            from core.gemini_client import generate_content_with_retry
+            response = generate_content_with_retry(
+                client=self.client,
+                model=self.adk_agent.model,
+                contents=f"{self.adk_agent.instruction}\n\n{prompt}",
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.2
+                )
+            )
+            questions = json.loads(response.text.strip())
+            if isinstance(questions, list) and len(questions) >= 2:
+                return questions[:n]
+            raise ValueError("Invalid response format")
+        except Exception as e:
+            print(f"[QUIZ ERROR] Batch MCQ generation failed: {e}. Falling back to single questions.")
+            fallback = []
+            for i in range(n):
+                single_json = self.generate_question(subconcept, level, explanation)
+                try:
+                    fallback.append(json.loads(single_json))
+                except Exception:
+                    fallback.append({
+                        "question": f"Question {i+1}: Which of the following best describes '{subconcept}'?",
+                        "options": [f"Core principle of {subconcept}", "Unrelated concept", "Random guess", "None of the above"],
+                        "correct_index": 0,
+                        "explanation": f"The first option provides the most accurate definition of {subconcept}."
+                    })
+            return fallback
+
     def grade_answer(self, question_data: dict, student_answer: str) -> dict:
         """Grades the student's MCQ response deterministically.
         

@@ -4,6 +4,7 @@ from agents.planner import PlannerAgent
 from agents.tutor import TutorAgent
 from agents.quiz import QuizAgent
 from agents.evaluator import EvaluatorAgent
+from agents.flashcard_agent import FlashcardAgent
 from mcp_server.client import MCPClientHelper
 
 class StudyBuddyOrchestrator:
@@ -22,6 +23,7 @@ class StudyBuddyOrchestrator:
         self.tutor = TutorAgent()
         self.quiz = QuizAgent()
         self.evaluator = EvaluatorAgent()
+        self.flashcard_agent = FlashcardAgent()
 
     def start_new_session(self, topic: str, initial_level: str = "intermediate", pdf_text: str = None) -> dict:
         """Initializes a new session, generates the subconcept list, and saves state to DB.
@@ -142,6 +144,22 @@ class StudyBuddyOrchestrator:
         # Tutor Agent generates explanation based on level and grounding
         explanation = self.tutor.explain(current_subconcept, level, curriculum_notes)
         return explanation
+
+    def get_quiz_questions_batch(self, state: dict, explanation: str, n: int = 3) -> list:
+        """Asks the Quiz Agent to generate a batch of 2-3 questions for the current subconcept.
+        
+        Args:
+            state: The current session state dictionary.
+            explanation: The text explanation just provided by the Tutor.
+            n: Number of questions (2 or 3).
+        Returns:
+            List of MCQ question dicts.
+        """
+        subconcepts = state["subconcepts"]
+        idx = state["current_index"]
+        current_subconcept = subconcepts[idx]
+        level = state["level"]
+        return self.quiz.generate_questions_batch(current_subconcept, level, explanation, n=n)
 
     def get_quiz_question(self, state: dict, explanation: str) -> dict:
         """Asks the Quiz Agent to generate a question for the current subconcept.
@@ -274,3 +292,22 @@ class StudyBuddyOrchestrator:
             return [
                 {"title": "Lesson Presentation Overview", "points": ["Overview of primary concepts", "Key terms and definitions"]}
             ]
+
+    def generate_mistake_flashcards(self, state: dict) -> list:
+        """Uses FlashcardAgent to generate targeted revision flashcards for weak topics.
+        
+        Args:
+            state: The current session state dictionary.
+        Returns:
+            List of {front, back} flashcard dicts.
+        """
+        history = state.get("history", [])
+        weak_topics = self.flashcard_agent.detect_weak_topics(history)
+        level = state.get("level", "intermediate")
+        
+        if not weak_topics:
+            completed = state.get("completed", [])
+            if completed:
+                weak_topics = completed[-3:]
+        
+        return self.flashcard_agent.generate_mistake_flashcards(weak_topics, level)

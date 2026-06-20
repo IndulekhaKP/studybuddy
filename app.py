@@ -13,35 +13,35 @@ if "theme" not in st.session_state:
 if st.session_state.theme == "light":
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         
         .stApp {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #1e293b;
+            background: linear-gradient(135deg, #FDF6EE 0%, #F5E6D0 100%);
+            font-family: 'Inter', sans-serif;
+            color: #2C1A0E;
         }
         
         /* Overrides for Light Mode */
         .stApp p, .stApp span, .stApp label, .stApp li {
-            color: #334155 !important;
+            color: #4A2E18 !important;
         }
         
         .main-title {
             font-size: 3.2rem;
             font-weight: 800;
-            background: linear-gradient(90deg, #4f46e5 0%, #0ea5e9 100%);
+            background: linear-gradient(90deg, #FF6F20 0%, #F2C94C 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Playfair Display', serif;
         }
         
         section[data-testid="stSidebar"] {
-            background-color: #f8fafc !important;
-            border-right: 1px solid #e2e8f0 !important;
+            background-color: #FDF0E0 !important;
+            border-right: 1px solid #D9B68C !important;
         }
         section[data-testid="stSidebar"] .stMarkdown p {
-            color: #475569 !important;
+            color: #A65E2E !important;
         }
         
         .badge {
@@ -54,143 +54,147 @@ if st.session_state.theme == "light":
             display: inline-block;
         }
         .badge-beginner {
-            background-color: #d1fae5 !important;
-            color: #065f46 !important;
-            border: 1px solid #10b981 !important;
+            background-color: #FFF3E0 !important;
+            color: #A65E2E !important;
+            border: 1px solid #FF6F20 !important;
         }
         .badge-intermediate {
-            background-color: #dbeafe !important;
-            color: #1e40af !important;
-            border: 1px solid #3b82f6 !important;
+            background-color: #FFF8E1 !important;
+            color: #8B5000 !important;
+            border: 1px solid #F2C94C !important;
         }
         
         .lesson-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-left: 5px solid #4f46e5;
+            background: #FFFFFF;
+            border: 1px solid #D9B68C;
+            border-left: 5px solid #FF6F20;
             border-radius: 16px;
             padding: 26px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px -2px rgba(198, 93, 59, 0.1);
         }
         .lesson-card h4, .lesson-card h1, .lesson-card h2, .lesson-card h3 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #1e293b !important;
+            font-family: 'Playfair Display', serif;
+            color: #2C1A0E !important;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
         .lesson-card p, .lesson-card li, .lesson-card div {
-            font-family: 'Lora', Georgia, serif;
+            font-family: 'Playfair Display', Georgia, serif;
             font-size: 1.05rem;
             line-height: 1.65;
-            color: #1e293b !important;
+            color: #2C1A0E !important;
         }
         
         .quiz-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-left: 5px solid #0ea5e9;
+            background: #FFFFFF;
+            border: 1px solid #D9B68C;
+            border-left: 5px solid #C65D3B;
             border-radius: 16px;
             padding: 26px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px -2px rgba(198, 93, 59, 0.1);
         }
         
         .evaluator-card {
-            background: #f5f3ff;
-            border: 1px dashed #c084fc;
+            background: #FFF8F0;
+            border: 1px dashed #F2C94C;
             border-radius: 12px;
             padding: 18px;
             margin-top: 15px;
         }
         
         .stTextInput>div>div>input {
-            background-color: #ffffff !important;
-            color: #1e293b !important;
-            border: 1px solid #cbd5e1 !important;
+            background-color: #FFFBF7 !important;
+            color: #2C1A0E !important;
+            border: 1px solid #D9B68C !important;
             border-radius: 10px !important;
         }
         .stSelectbox>div>div>div {
-            background-color: #ffffff !important;
-            color: #1e293b !important;
-            border: 1px solid #cbd5e1 !important;
+            background-color: #FFFBF7 !important;
+            color: #2C1A0E !important;
+            border: 1px solid #D9B68C !important;
             border-radius: 10px !important;
         }
         .stForm {
-            background: #ffffff !important;
-            border: 1px solid #e2e8f0 !important;
+            background: #FFFFFF !important;
+            border: 1px solid #D9B68C !important;
             border-radius: 16px !important;
             padding: 24px !important;
             box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
         }
         
         .stButton>button {
-            background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%) !important;
+            background: linear-gradient(90deg, #FF6F20 0%, #C65D3B 100%) !important;
             color: white !important;
             border: none !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
-            font-weight: 600 !important;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-weight: 700 !important;
+            font-family: 'Inter', sans-serif !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.06em !important;
             transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.2) !important;
+            box-shadow: 0 4px 14px rgba(255, 111, 32, 0.3) !important;
         }
         .stButton>button:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35) !important;
+            box-shadow: 0 6px 20px rgba(255, 111, 32, 0.45) !important;
         }
         
         .stDownloadButton>button {
-            background: linear-gradient(90deg, #0ea5e9 0%, #0284c7 100%) !important;
+            background: linear-gradient(90deg, #F2C94C 0%, #A65E2E 100%) !important;
             color: white !important;
             border: none !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
             font-weight: 600 !important;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-family: 'Inter', sans-serif !important;
             transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(14, 165, 233, 0.2) !important;
+            box-shadow: 0 4px 14px rgba(242, 201, 76, 0.3) !important;
         }
         .stDownloadButton>button:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(14, 165, 233, 0.35) !important;
+            box-shadow: 0 6px 20px rgba(242, 201, 76, 0.45) !important;
         }
         
         div[data-testid="stMarkdownContainer"] p {
-            color: #334155 !important;
+            color: #4A2E18 !important;
         }
     </style>
     """, unsafe_allow_html=True)
 else:
     st.markdown("""
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         
         .stApp {
-            background: linear-gradient(135deg, #15181c 0%, #1d2127 100%);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #e2e8f0;
+            background: linear-gradient(135deg, #1A0F07 0%, #2C1810 100%);
+            font-family: 'Inter', sans-serif;
+            color: #F5E6D0;
         }
         
         /* Overrides for Night Eye Mode */
         .stApp p, .stApp span, .stApp label, .stApp li {
-            color: #cbd5e1 !important;
+            color: #D9B68C !important;
         }
         
         .main-title {
             font-size: 3.2rem;
             font-weight: 800;
-            background: linear-gradient(90deg, #a78bfa 0%, #f59e0b 100%);
+            background: linear-gradient(90deg, #FF6F20 0%, #F2C94C 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Playfair Display', serif;
         }
         
         section[data-testid="stSidebar"] {
-            background-color: #111317 !important;
-            border-right: 1px solid #2d3139 !important;
+            background-color: #150A04 !important;
+            border-right: 1px solid #3D2010 !important;
         }
         section[data-testid="stSidebar"] .stMarkdown p {
-            color: #94a3b8 !important;
+            color: #D9B68C !important;
         }
         
         .badge {
@@ -203,40 +207,42 @@ else:
             display: inline-block;
         }
         .badge-beginner {
-            background-color: rgba(16, 185, 129, 0.12) !important;
-            color: #34d399 !important;
-            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+            background-color: rgba(255,111,32,0.12) !important;
+            color: #FF8C42 !important;
+            border: 1px solid rgba(255,111,32,0.3) !important;
         }
         .badge-intermediate {
-            background-color: rgba(59, 130, 246, 0.12) !important;
-            color: #60a5fa !important;
-            border: 1px solid rgba(59, 130, 246, 0.3) !important;
+            background-color: rgba(242,201,76,0.12) !important;
+            color: #F2C94C !important;
+            border: 1px solid rgba(242,201,76,0.3) !important;
         }
         
         .lesson-card {
-            background: #1a1e24;
-            border: 1px solid #2d3139;
-            border-left: 5px solid #a78bfa;
+            background: #2C1810;
+            border: 1px solid #3D2010;
+            border-left: 5px solid #FF6F20;
             border-radius: 16px;
             padding: 26px;
             margin-bottom: 24px;
             box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
         }
         .lesson-card h4, .lesson-card h1, .lesson-card h2, .lesson-card h3 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #e2e8f0 !important;
+            font-family: 'Playfair Display', serif;
+            color: #F5E6D0 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
         .lesson-card p, .lesson-card li, .lesson-card div {
-            font-family: 'Lora', Georgia, serif;
+            font-family: 'Playfair Display', Georgia, serif;
             font-size: 1.05rem;
             line-height: 1.65;
-            color: #cbd5e1 !important;
+            color: #D9B68C !important;
         }
         
         .quiz-card {
-            background: #1a1e24;
-            border: 1px solid #2d3139;
-            border-left: 5px solid #f59e0b;
+            background: #2C1810;
+            border: 1px solid #3D2010;
+            border-left: 5px solid #C65D3B;
             border-radius: 16px;
             padding: 26px;
             margin-bottom: 24px;
@@ -244,67 +250,69 @@ else:
         }
         
         .evaluator-card {
-            background: rgba(167, 139, 250, 0.08);
-            border: 1px dashed rgba(245, 158, 11, 0.4);
+            background: rgba(255,111,32,0.08);
+            border: 1px dashed rgba(242,201,76,0.4);
             border-radius: 12px;
             padding: 18px;
             margin-top: 15px;
         }
         
         .stTextInput>div>div>input {
-            background-color: #111317 !important;
-            color: #e2e8f0 !important;
-            border: 1px solid #2d3139 !important;
+            background-color: #150A04 !important;
+            color: #F5E6D0 !important;
+            border: 1px solid #3D2010 !important;
             border-radius: 10px !important;
         }
         .stSelectbox>div>div>div {
-            background-color: #111317 !important;
-            color: #e2e8f0 !important;
-            border: 1px solid #2d3139 !important;
+            background-color: #150A04 !important;
+            color: #F5E6D0 !important;
+            border: 1px solid #3D2010 !important;
             border-radius: 10px !important;
         }
         .stForm {
-            background: #1a1e24 !important;
-            border: 1px solid #2d3139 !important;
+            background: #2C1810 !important;
+            border: 1px solid #3D2010 !important;
             border-radius: 16px !important;
             padding: 24px !important;
             box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
         }
         
         .stButton>button {
-            background: linear-gradient(90deg, #a78bfa 0%, #8b5cf6 100%) !important;
+            background: linear-gradient(90deg, #FF6F20 0%, #C65D3B 100%) !important;
             color: white !important;
             border: none !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
-            font-weight: 600 !important;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-weight: 700 !important;
+            font-family: 'Inter', sans-serif !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.06em !important;
             transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3) !important;
+            box-shadow: 0 4px 14px rgba(255,111,32,0.35) !important;
         }
         .stButton>button:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.45) !important;
+            box-shadow: 0 6px 20px rgba(255,111,32,0.5) !important;
         }
         
         .stDownloadButton>button {
-            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%) !important;
+            background: linear-gradient(90deg, #F2C94C 0%, #A65E2E 100%) !important;
             color: white !important;
             border: none !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
             font-weight: 600 !important;
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-family: 'Inter', sans-serif !important;
             transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3) !important;
+            box-shadow: 0 4px 14px rgba(242,201,76,0.35) !important;
         }
         .stDownloadButton>button:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45) !important;
+            box-shadow: 0 6px 20px rgba(242,201,76,0.5) !important;
         }
         
         div[data-testid="stMarkdownContainer"] p {
-            color: #cbd5e1 !important;
+            color: #D9B68C !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -357,6 +365,16 @@ if "exam_score" not in st.session_state:
     st.session_state.exam_score = None
 if "slides_html" not in st.session_state:
     st.session_state.slides_html = None
+if "quiz_round" not in st.session_state:
+    st.session_state.quiz_round = None
+if "quiz_round_idx" not in st.session_state:
+    st.session_state.quiz_round_idx = 0
+if "quiz_round_results" not in st.session_state:
+    st.session_state.quiz_round_results = []
+if "flashcards_html" not in st.session_state:
+    st.session_state.flashcards_html = None
+if "smart_flashcards" not in st.session_state:
+    st.session_state.smart_flashcards = []
 
 def reset_session():
     st.session_state.state = None
@@ -367,6 +385,11 @@ def reset_session():
     st.session_state.exam_graded = None
     st.session_state.exam_score = None
     st.session_state.slides_html = None
+    st.session_state.quiz_round = None
+    st.session_state.quiz_round_idx = 0
+    st.session_state.quiz_round_results = []
+    st.session_state.flashcards_html = None
+    st.session_state.smart_flashcards = []
 
 def parse_flashcards(text: str):
     """Extracts flashcards from tutor's output based on [FLASHCARD] tags."""
@@ -453,6 +476,36 @@ if st.session_state.state:
         )
         st.sidebar.write("---")
             
+    # Smart Mistake Flashcards
+    st.sidebar.markdown("### \U0001f9e0 Smart Flashcards")
+    if not st.session_state.get("flashcards_html"):
+        if st.sidebar.button("\u26a1 Generate Mistake Flashcards"):
+            with st.spinner("FlashcardAgent analyzing weak topics..."):
+                smart_cards = orchestrator.generate_mistake_flashcards(state)
+                if smart_cards:
+                    fc_html = orchestrator.flashcard_agent.build_html_flashcard_deck(
+                        smart_cards, title="Smart Revision Flashcards"
+                    )
+                    st.session_state.flashcards_html = fc_html
+                    st.session_state.smart_flashcards = smart_cards
+                    st.rerun()
+                else:
+                    st.sidebar.info("No weak topics detected yet - keep studying!")
+    else:
+        card_count = len(st.session_state.get("smart_flashcards", []))
+        st.sidebar.caption(f"\u2705 {card_count} targeted flashcards ready")
+        st.sidebar.download_button(
+            label="\U0001f4e5 Download Flashcard Deck (HTML)",
+            data=st.session_state.flashcards_html,
+            file_name="studybuddy_smart_flashcards.html",
+            mime="text/html"
+        )
+        if st.sidebar.button("\U0001f504 Regenerate Flashcards"):
+            st.session_state.flashcards_html = None
+            st.session_state.smart_flashcards = []
+            st.rerun()
+    st.sidebar.write("---")
+
     # Add Download Study Notes button
     notes_markdown = f"# StudyBuddy Study Notes: {state['topic']}\n\n"
     if state.get("history"):
@@ -480,7 +533,7 @@ st.markdown("<h1 class='main-title' style='margin-top: 5px;'>🎓 StudyBuddy: Ad
 
 if not st.session_state.state:
     # Setup Page
-    st.write("Welcome! StudyBuddy is an intelligent, multi-agent tutoring system. Simply enter a topic or upload a PDF textbook/chapter you want to learn, and we will build a tailored curriculum that adapts difficulty in real time based on your responses.")
+    st.write("Welcome to StudyBuddy — your intelligent Autumn-powered tutor. Enter a topic or upload a PDF textbook chapter below, and our AI agents will craft a personalized learning path that adapts to your pace in real time.")
     
     # Mode Selection
     mode = st.radio("Choose how you want to learn:", ["Study by Topic Name", "Study from an uploaded PDF Document"])
@@ -591,9 +644,9 @@ else:
     if current_idx >= len(subconcepts):
         st.balloons()
         st.markdown("""
-        <div style='text-align: center; padding: 25px; background: rgba(30, 41, 59, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; border-left: 5px solid #8b5cf6; margin-bottom: 20px; backdrop-filter: blur(12px);'>
-            <h2 style='color: #8b5cf6; margin: 0;'>🎉 Curriculum Lessons Completed!</h2>
-            <p style='color: #cbd5e1; margin-top: 5px; margin-bottom: 0;'>Amazing job! You have successfully mastered all lessons. Now, complete the Final Course Exam to receive your Certificate.</p>
+        <div style='text-align: center; padding: 25px; background: rgba(255, 111, 32, 0.1); border: 1px solid rgba(255, 111, 32, 0.3); border-radius: 16px; border-left: 5px solid #FF6F20; margin-bottom: 20px; backdrop-filter: blur(12px);'>
+            <h2 style='color: #FF6F20; margin: 0;'>🎉 Curriculum Lessons Completed!</h2>
+            <p style='color: #4A2E18; margin-top: 5px; margin-bottom: 0;'>Amazing job! You have successfully mastered all lessons. Now, complete the Final Course Exam to receive your Certificate.</p>
         </div>
         """, unsafe_allow_html=True)
         
@@ -826,35 +879,35 @@ else:
             
             # Dynamic card colors based on selected theme
             if st.session_state.theme == "light":
-                front_bg = "linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%)"
-                front_color = "#1e293b"
-                front_border = "1px solid #cbd5e1"
-                back_bg = "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)"
-                back_color = "#ffffff"
-                back_border = "1px solid rgba(79, 70, 229, 0.2)"
-                title_color_front = "#64748b"
-                title_color_back = "#e0e7ff"
-                shadow = "rgba(0,0,0,0.08)"
+                front_bg = "linear-gradient(135deg, #FFFBF7 0%, #FDF0E0 100%)"
+                front_color = "#2C1A0E"
+                front_border = "1px solid #D9B68C"
+                back_bg = "linear-gradient(135deg, #FF6F20 0%, #C65D3B 100%)"
+                back_color = "#FFFFFF"
+                back_border = "1px solid rgba(255, 111, 32, 0.2)"
+                title_color_front = "#A65E2E"
+                title_color_back = "#FFE0CC"
+                shadow = "rgba(198, 93, 59, 0.15)"
             else:
-                front_bg = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
-                front_color = "#e2e8f0"
-                front_border = "1px solid rgba(255, 255, 255, 0.08)"
-                back_bg = "linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)"
-                back_color = "#ffffff"
-                back_border = "1px solid rgba(167, 139, 250, 0.2)"
-                title_color_front = "#94a3b8"
-                title_color_back = "#ddd6fe"
-                shadow = "rgba(0,0,0,0.4)"
+                front_bg = "linear-gradient(135deg, #2C1810 0%, #1A0F07 100%)"
+                front_color = "#F5E6D0"
+                front_border = "1px solid rgba(217, 182, 140, 0.15)"
+                back_bg = "linear-gradient(135deg, #FF6F20 0%, #A65E2E 100%)"
+                back_color = "#FFFFFF"
+                back_border = "1px solid rgba(255, 111, 32, 0.25)"
+                title_color_front = "#D9B68C"
+                title_color_back = "#FFE0CC"
+                shadow = "rgba(0, 0, 0, 0.45)"
 
             cards_html = f"""
             <style>
-                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
                 .card-grid {{
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
                     gap: 12px;
                     padding: 5px;
-                    font-family: 'Plus Jakarta Sans', sans-serif;
+                    font-family: 'Inter', sans-serif;
                 }}
                 .flip-card {{
                     background-color: transparent;
@@ -942,61 +995,119 @@ else:
         
     with col_quiz:
         st.markdown("<div class='quiz-card'>", unsafe_allow_html=True)
-        st.markdown("#### 📝 Concept Check")
+        st.markdown("#### 📝 Concept Check (2–3 Questions)")
         
-        # Quiz Agent generates quiz question (ignore string questions from older sessions)
-        if not st.session_state.question or isinstance(st.session_state.question, str):
-            with st.spinner("Quiz agent writing question..."):
-                question_data = orchestrator.get_quiz_question(state, explanation)
-                st.session_state.question = question_data
-        else:
-            question_data = st.session_state.question
-            
-        # Student response controls
-        if not st.session_state.graded:
+        # Load or generate the quiz round (batch of 3 questions)
+        if not st.session_state.quiz_round:
+            with st.spinner("Quiz agent preparing 3 questions for this concept..."):
+                quiz_round = orchestrator.get_quiz_questions_batch(state, explanation, n=3)
+                st.session_state.quiz_round = quiz_round
+                st.session_state.quiz_round_idx = 0
+                st.session_state.quiz_round_results = []
+        
+        quiz_round = st.session_state.quiz_round
+        q_idx = st.session_state.quiz_round_idx
+        total_qs = len(quiz_round)
+        
+        if q_idx < total_qs and not st.session_state.graded:
+            question_data = quiz_round[q_idx]
+            st.markdown(f"**Question {q_idx + 1} of {total_qs}:**")
             options = question_data.get("options", [])
             selected_option = st.radio(
-                label=f"**Question:** {question_data.get('question', '')}",
+                label=question_data.get('question', ''),
                 options=options,
                 index=None,
-                key="mcq_option_radio"
+                key=f"mcq_round_radio_{q_idx}"
             )
             st.write("---")
-            if st.button("Submit Answer", type="primary"):
+            if st.button(f"Submit Answer ({q_idx + 1}/{total_qs})", type="primary"):
                 if selected_option is None:
                     st.warning("Please select an option before submitting.")
                 else:
-                    with st.spinner("Quiz Agent grading and Evaluator Agent planning next step..."):
-                        # Submit and evaluate (Adaptive Loop execution)
-                        result = orchestrator.submit_answer(state, question_data, selected_option)
-                        st.session_state.graded = result
-                        st.session_state.state = result["next_state"]
-                        st.rerun()
-        else:
-            st.markdown(f"**Question:**\n{question_data.get('question', '')}")
-            st.write("---")
+                    grade = orchestrator.quiz.grade_answer(question_data, selected_option)
+                    st.session_state.quiz_round_results.append({
+                        "correct": grade["correct"],
+                        "feedback": grade["explanation"],
+                        "question": question_data.get("question", ""),
+                        "selected": selected_option
+                    })
+                    next_q_idx = q_idx + 1
+                    st.session_state.quiz_round_idx = next_q_idx
+                    
+                    if next_q_idx >= total_qs:
+                        round_results = st.session_state.quiz_round_results
+                        correct_count = sum(1 for r in round_results if r["correct"])
+                        passed = correct_count >= 2  # >=2/3 to pass
+                        
+                        combined_feedback = f"**Round Complete:** {correct_count}/{total_qs} correct.\n\n"
+                        for i, r in enumerate(round_results):
+                            status = "✅" if r["correct"] else "❌"
+                            combined_feedback += f"{status} **Q{i+1}:** {r['feedback']}\n\n"
+                        
+                        evaluation = orchestrator.evaluator.evaluate(
+                            state["level"], passed, combined_feedback
+                        )
+                        
+                        current_subconcept = state["subconcepts"][state["current_index"]]
+                        if current_subconcept not in state["scores"]:
+                            state["scores"][current_subconcept] = []
+                        state["scores"][current_subconcept].append(passed)
+                        state["history"].append({
+                            "subconcept": current_subconcept,
+                            "level": state["level"],
+                            "correct": passed,
+                            "action": evaluation["action"],
+                            "next_level": evaluation["next_level"],
+                            "reasoning": evaluation.get("reasoning", ""),
+                            "score": f"{correct_count}/{total_qs}"
+                        })
+                        
+                        if evaluation["action"] == "advance":
+                            if current_subconcept not in state["completed"]:
+                                state["completed"].append(current_subconcept)
+                            state["current_index"] += 1
+                        state["level"] = evaluation["next_level"]
+                        
+                        orchestrator.save_session(state)
+                        st.session_state.graded = {
+                            "correct": passed,
+                            "feedback": combined_feedback,
+                            "evaluation": evaluation,
+                            "next_state": state
+                        }
+                        st.session_state.state = state
+                    st.rerun()
+        
+        elif st.session_state.graded:
             result = st.session_state.graded
             correct = result["correct"]
             feedback = result["feedback"]
             evaluation = result["evaluation"]
+            round_results = st.session_state.get("quiz_round_results", [])
+            correct_count = sum(1 for r in round_results if r["correct"])
+            total_qs_done = len(round_results)
             
             if correct:
-                st.success(feedback)
+                st.success(f"🎉 **Passed!** {correct_count}/{total_qs_done} correct — great work!")
             else:
-                st.error(feedback)
+                st.error(f"❌ **Not yet.** {correct_count}/{total_qs_done} correct — need ≥2 to advance.")
             
-            # Evaluator Output (demonstrates adaptive loop routing)
+            with st.expander("📋 See detailed feedback"):
+                st.markdown(feedback)
+            
             st.markdown("<div class='evaluator-card'>", unsafe_allow_html=True)
             st.markdown(f"🔄 **Evaluator Decision:** Action: `{evaluation['action'].upper()}` | Next Level: `{evaluation['next_level'].upper()}`")
             st.caption(f"*Rationale: {evaluation['reasoning']}*")
             st.markdown("</div>", unsafe_allow_html=True)
             
-            # Action button based on loop
             if correct:
                 if st.button("➡️ Advance to Next Concept"):
                     st.session_state.explanation = None
                     st.session_state.question = None
                     st.session_state.graded = None
+                    st.session_state.quiz_round = None
+                    st.session_state.quiz_round_idx = 0
+                    st.session_state.quiz_round_results = []
                     st.rerun()
             else:
                 btn_label = "🔄 Re-try Concept (Simpler Analogy)" if evaluation["action"] == "repeat_simpler" else "🔄 Re-try Concept (Practice)"
@@ -1004,6 +1115,9 @@ else:
                     st.session_state.explanation = None
                     st.session_state.question = None
                     st.session_state.graded = None
+                    st.session_state.quiz_round = None
+                    st.session_state.quiz_round_idx = 0
+                    st.session_state.quiz_round_results = []
                     st.rerun()
                     
         st.markdown("</div>", unsafe_allow_html=True)
