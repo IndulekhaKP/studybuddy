@@ -241,3 +241,34 @@ class StudyBuddyOrchestrator:
             "evaluation": evaluation,
             "next_state": state
         }
+
+    def get_final_exam(self, state: dict) -> list[dict]:
+        """Generates a final course exam covering all subconcepts in the session."""
+        subconcepts = state["subconcepts"]
+        exam_json = self.quiz.generate_final_exam(subconcepts)
+        try:
+            return json.loads(exam_json)
+        except Exception as e:
+            print(f"[ORCHESTRATOR ERROR] Failed to parse final exam JSON: {e}")
+            return [{
+                "question": "What is the primary key to mastering the topic you just studied?",
+                "options": [
+                    "Reviewing and practicing consistently",
+                    "Skipping the quiz check-ins",
+                    "Relying on guessing",
+                    "Avoiding explanations"
+                ],
+                "correct_index": 0,
+                "explanation": "Consistent practice and active study are scientifically proven to be the most effective methods to master any academic topic."
+            }]
+
+    def get_presentation_slides(self, pdf_text: str) -> list[dict]:
+        """Generates slide summaries from the uploaded PDF context."""
+        slides_json = self.tutor.generate_slides_summary(pdf_text)
+        try:
+            return json.loads(slides_json)
+        except Exception as e:
+            print(f"[ORCHESTRATOR ERROR] Failed to parse slides JSON: {e}")
+            return [
+                {"title": "Lesson Presentation Overview", "points": ["Overview of primary concepts", "Key terms and definitions"]}
+            ]

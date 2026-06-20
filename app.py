@@ -101,12 +101,24 @@ if "question" not in st.session_state:
     st.session_state.question = None
 if "graded" not in st.session_state:
     st.session_state.graded = None
+if "exam_questions" not in st.session_state:
+    st.session_state.exam_questions = None
+if "exam_graded" not in st.session_state:
+    st.session_state.exam_graded = None
+if "exam_score" not in st.session_state:
+    st.session_state.exam_score = None
+if "slides_html" not in st.session_state:
+    st.session_state.slides_html = None
 
 def reset_session():
     st.session_state.state = None
     st.session_state.explanation = None
     st.session_state.question = None
     st.session_state.graded = None
+    st.session_state.exam_questions = None
+    st.session_state.exam_graded = None
+    st.session_state.exam_score = None
+    st.session_state.slides_html = None
 
 def parse_flashcards(text: str):
     """Extracts flashcards from tutor's output based on [FLASHCARD] tags."""
@@ -138,7 +150,13 @@ def parse_flashcards(text: str):
     return clean_explanation, flashcards
 
 # Sidebar Design
-st.sidebar.markdown("<h2 style='color:#4f46e5; margin-bottom: 0px;'>🎓 StudyBuddy</h2>", unsafe_allow_html=True)
+import os
+col_side_logo, col_side_text = st.sidebar.columns([0.25, 0.75])
+with col_side_logo:
+    if os.path.exists("logo.png"):
+        st.image("logo.png", width=45)
+with col_side_text:
+    st.sidebar.markdown("<h2 style='color:#4f46e5; margin-top: 5px; margin-bottom: 0px;'>StudyBuddy</h2>", unsafe_allow_html=True)
 st.sidebar.caption("Multi-Agent Adaptive Tutor")
 st.sidebar.write("---")
 
@@ -166,13 +184,55 @@ if st.session_state.state:
             st.sidebar.write(f"⚪ {concept}")
             
     st.sidebar.write("---")
+    
+    # Add Slides presentation generator download
+    if state.get("pdf_text"):
+        st.sidebar.markdown("### 🖥️ Slide Presentation")
+        if not st.session_state.slides_html:
+            if st.sidebar.button("⚙️ Generate Slides Summary"):
+                with st.spinner("Generating slide deck summary..."):
+                    slides_data = orchestrator.get_presentation_slides(state["pdf_text"])
+                    from core.presentation import generate_html_slides
+                    st.session_state.slides_html = generate_html_slides(slides_data)
+                    st.rerun()
+        else:
+            st.sidebar.download_button(
+                label="📥 Download HTML Slideshow",
+                data=st.session_state.slides_html,
+                file_name="lesson_presentation.html",
+                mime="text/html"
+            )
+            st.sidebar.write("---")
+            
+    # Add Download Study Notes button
+    notes_markdown = f"# StudyBuddy Study Notes: {state['topic']}\n\n"
+    if state.get("history"):
+        for log in state["history"]:
+            notes_markdown += f"## Concept: {log['subconcept']}\n"
+            notes_markdown += f"- **Difficulty Level**: {log['level'].upper()}\n"
+            notes_markdown += f"- **Result Check**: {'PASSED' if log['correct'] else 'FAILED'}\n"
+            notes_markdown += f"- **Grader Feedback**: {log['reasoning']}\n\n"
+            
+    st.sidebar.download_button(
+        label="📝 Download Study Notes (MD)",
+        data=notes_markdown,
+        file_name=f"{state['topic'].replace(' ', '_')}_study_notes.md",
+        mime="text/markdown"
+    )
+    st.sidebar.write("---")
+
     st.sidebar.caption(f"Session: `{state['session_id']}`")
     if st.sidebar.button("🔄 Study New Topic"):
         reset_session()
         st.rerun()
 
 # Main Panel Design
-st.markdown("<h1 class='main-title'>StudyBuddy: Adaptive Learning</h1>", unsafe_allow_html=True)
+col_title_logo, col_title_text = st.columns([0.1, 0.9])
+with col_title_logo:
+    if os.path.exists("logo.png"):
+        st.image("logo.png", width=75)
+with col_title_text:
+    st.markdown("<h1 class='main-title' style='margin-top: 5px;'>StudyBuddy: Adaptive Learning</h1>", unsafe_allow_html=True)
 
 if not st.session_state.state:
     # Setup Page
@@ -274,17 +334,207 @@ else:
     if current_idx >= len(subconcepts):
         st.balloons()
         st.markdown("""
-        <div style='text-align: center; padding: 40px; background-color: white; border-radius: 12px;'>
-            <h2 style='color: #4f46e5;'>🎉 Course Completed!</h2>
-            <p>Amazing job! You have successfully mastered all concepts for this topic.</p>
+        <div style='text-align: center; padding: 25px; background-color: white; border-radius: 12px; border-left: 5px solid #4f46e5; margin-bottom: 20px;'>
+            <h2 style='color: #4f46e5; margin: 0;'>🎉 Curriculum Lessons Completed!</h2>
+            <p style='color: #4b5563; margin-top: 5px; margin-bottom: 0;'>Amazing job! You have successfully mastered all lessons. Now, complete the Final Course Exam to receive your Certificate.</p>
         </div>
         """, unsafe_allow_html=True)
         
-        st.write("### 📈 Session History & Progress log:")
+        st.markdown("### 🎓 Final Exam Check (10 Multiple Choice Questions)")
+        
+        if not st.session_state.exam_questions:
+            if st.button("📝 Start Final Course Exam", type="primary"):
+                with st.spinner("Quiz agent preparing your 10-question final exam..."):
+                    st.session_state.exam_questions = orchestrator.get_final_exam(state)
+                    st.rerun()
+        else:
+            questions = st.session_state.exam_questions
+            
+            if st.session_state.exam_score is None:
+                # Display 10 questions in a form
+                with st.form("final_exam_form"):
+                    user_selections = []
+                    for q_idx, q in enumerate(questions):
+                        st.markdown(f"**Question {q_idx+1}:** {q['question']}")
+                        sel = st.radio(
+                            f"Choose option for Question {q_idx+1}:", 
+                            q['options'], 
+                            index=None, 
+                            key=f"exam_radio_q_{q_idx}"
+                        )
+                        user_selections.append(sel)
+                        st.write("---")
+                        
+                    submit_exam = st.form_submit_button("Submit Exam answers")
+                    if submit_exam:
+                        if None in user_selections:
+                            st.warning("Please answer all 10 questions before submitting.")
+                        else:
+                            # Grade exam
+                            score = 0
+                            graded_results = []
+                            for q_idx, q in enumerate(questions):
+                                correct_idx = q["correct_index"]
+                                correct_ans = q["options"][correct_idx]
+                                user_ans = user_selections[q_idx]
+                                is_correct = (user_ans == correct_ans)
+                                if is_correct:
+                                    score += 1
+                                graded_results.append({
+                                    "question": q["question"],
+                                    "user_answer": user_ans,
+                                    "correct_answer": correct_ans,
+                                    "is_correct": is_correct,
+                                    "explanation": q.get("explanation", "")
+                                })
+                            st.session_state.exam_score = score
+                            st.session_state.exam_graded = graded_results
+                            st.rerun()
+            else:
+                score = st.session_state.exam_score
+                graded = st.session_state.exam_graded
+                
+                st.markdown(f"## 🏆 Your Final Exam Score: **{score} / 10**")
+                if score >= 7:
+                    st.success("🎉 Congratulations! You passed the course!")
+                    
+                    # Generate Certificate HTML
+                    cert_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificate of Completion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {{
+            font-family: 'Outfit', sans-serif;
+            background-color: #f3f4f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }}
+        .certificate-container {{
+            width: 800px;
+            height: 550px;
+            background: white;
+            border: 15px solid #4f46e5;
+            border-image: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%) 15;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            position: relative;
+        }}
+        .title {{
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }}
+        .subtitle {{
+            font-size: 1.25rem;
+            color: #4b5563;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+        }}
+        .presented-to {{
+            font-size: 1.1rem;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }}
+        .student-name {{
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #111827;
+            border-bottom: 2px solid #e5e7eb;
+            display: inline-block;
+            padding-bottom: 5px;
+            margin-bottom: 30px;
+        }}
+        .course-name {{
+            font-size: 1.5rem;
+            color: #374151;
+            margin-bottom: 40px;
+        }}
+        .date-signature {{
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            padding: 0 50px;
+        }}
+        .item {{
+            border-top: 1px solid #d1d5db;
+            padding-top: 10px;
+            width: 200px;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }}
+        .badge {{
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid #bfdbfe;
+        }}
+    </style>
+</head>
+<body>
+    <div class="certificate-container">
+        <div class="title">StudyBuddy</div>
+        <div class="subtitle">Certificate of Completion</div>
+        <div class="presented-to">This is proudly presented to the scholar who mastered</div>
+        <div class="student-name">StudyBuddy Graduate</div>
+        <div class="course-name">Course Topic: <strong>{state['topic']}</strong></div>
+        <div class="badge">Final Score: {score}/10 (Passed)</div>
+        <div class="date-signature">
+            <div class="item">Date Issued</div>
+            <div class="item">StudyBuddy Adaptive Agent</div>
+        </div>
+    </div>
+</body>
+</html>"""
+                    st.download_button(
+                        label="🎓 Download Certificate of Completion",
+                        data=cert_html,
+                        file_name="studybuddy_certificate.html",
+                        mime="text/html"
+                    )
+                else:
+                    st.error("❌ You did not pass. You need at least 7/10 to unlock your Certificate of Completion.")
+                    if st.button("🔄 Retake Exam"):
+                        st.session_state.exam_score = None
+                        st.session_state.exam_graded = None
+                        st.rerun()
+                        
+                # Detailed exam breakdown
+                st.write("### 📝 Exam Review Breakdown:")
+                for idx, r in enumerate(graded):
+                    c_status = "✅ Correct" if r["is_correct"] else "❌ Incorrect"
+                    with st.expander(f"Question {idx+1}: {r['question']} - {c_status}"):
+                        st.write(f"**Your Answer:** {r['user_answer']}")
+                        st.write(f"**Correct Answer:** {r['correct_answer']}")
+                        st.caption(f"*Rationale: {r['explanation']}*")
+                        
+        st.write("---")
+        st.write("### 📈 Course Progress log:")
         st.write(state["history"])
         
         if st.button("Study another topic"):
             reset_session()
+            st.session_state.exam_questions = None
+            st.session_state.exam_graded = None
+            st.session_state.exam_score = None
+            st.session_state.slides_html = None
             st.rerun()
             
         st.stop()

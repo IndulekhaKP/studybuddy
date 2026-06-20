@@ -109,4 +109,57 @@ class QuizAgent:
                 "correct": False,
                 "explanation": f"Error grading choice: {e}"
             }
+
+    def generate_final_exam(self, subconcepts: list) -> str:
+        """Generates a final exam containing exactly 10 MCQ questions covering the subconcepts.
+        
+        Returns:
+            A JSON string containing a list of 10 question dictionaries.
+        """
+        from google.genai import types
+        
+        prompt = (
+            f"Generate a final course exam containing exactly 10 multiple-choice questions (MCQs) "
+            f"covering the following subconcepts that the student has just learned:\n"
+            f"{', '.join(subconcepts)}\n\n"
+            f"Requirements:\n"
+            f"- Return a valid JSON array of exactly 10 objects.\n"
+            f"- Each object in the array must contain exactly 4 keys:\n"
+            f"  1. 'question': the question text string.\n"
+            f"  2. 'options': a list of exactly 4 choices (strings).\n"
+            f"  3. 'correct_index': integer index (0, 1, 2, or 3) of the correct option.\n"
+            f"  4. 'explanation': a clear educational explanation of the correct choice.\n"
+            f"- Output ONLY the raw JSON array. Do not wrap it in markdown code blocks."
+        )
+        
+        try:
+            response = self.client.models.generate_content(
+                model=self.adk_agent.model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.2
+                )
+            )
+            return response.text.strip()
+        except Exception as e:
+            print(f"[QUIZ ERROR] Final exam generation failed: {e}. Using fallback.")
+            import json
+            fallback_questions = []
+            for i, concept in enumerate(subconcepts * 4):
+                if len(fallback_questions) >= 10:
+                    break
+                fallback_questions.append({
+                    "question": f"Which of the following best describes the key concept of '{concept}'?",
+                    "options": [
+                        f"A core principle of {concept}",
+                        f"An unrelated detail",
+                        f"A generic false choice",
+                        f"None of the above"
+                    ],
+                    "correct_index": 0,
+                    "explanation": f"The first option provides the most accurate and foundational definition of {concept}."
+                })
+            return json.dumps(fallback_questions)
+
 class_symbols = [QuizAgent]
