@@ -46,6 +46,7 @@ class TutorAgent:
         from google.genai import types
         
         try:
+            from core.gemini_client import generate_content_with_retry
             if curriculum_notes == "USE_GOOGLE_SEARCH":
                 prompt = (
                     f"Concept to teach: '{subconcept}'\n"
@@ -54,7 +55,8 @@ class TutorAgent:
                     f"on this concept. Then, provide a clear explanation containing a relatable analogy "
                     f"and a worked example based on those search results."
                 )
-                response = self.client.models.generate_content(
+                response = generate_content_with_retry(
+                    client=self.client,
                     model=self.adk_agent.model,
                     contents=f"{self.adk_agent.instruction}\n\n{prompt}",
                     config=types.GenerateContentConfig(
@@ -68,7 +70,8 @@ class TutorAgent:
                     f"Grounding curriculum notes: {curriculum_notes}\n\n"
                     f"Provide a clear explanation with an analogy and a worked example."
                 )
-                response = self.client.models.generate_content(
+                response = generate_content_with_retry(
+                    client=self.client,
                     model=self.adk_agent.model,
                     contents=f"{self.adk_agent.instruction}\n\n{prompt}"
                 )
@@ -99,7 +102,9 @@ class TutorAgent:
         )
         
         try:
-            response = self.client.models.generate_content(
+            from core.gemini_client import generate_content_with_retry
+            response = generate_content_with_retry(
+                client=self.client,
                 model=self.adk_agent.model,
                 contents=prompt,
                 config=types.GenerateContentConfig(

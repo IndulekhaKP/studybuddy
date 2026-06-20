@@ -102,7 +102,9 @@ class StudyBuddyOrchestrator:
                     f"Provide only the relevant factual text as-is. Do not write summaries or explanations yourself.\n\n"
                     f"Document Text:\n{pdf_text}"
                 )
-                response = client.models.generate_content(
+                from core.gemini_client import generate_content_with_retry
+                response = generate_content_with_retry(
+                    client=client,
                     model="gemini-2.5-flash",
                     contents=prompt
                 )

@@ -63,7 +63,9 @@ class EvaluatorAgent:
         )
         
         try:
-            response = self.client.models.generate_content(
+            from core.gemini_client import generate_content_with_retry
+            response = generate_content_with_retry(
+                client=self.client,
                 model=self.adk_agent.model,
                 contents=f"{self.adk_agent.instruction}\n\n{prompt}",
                 config=types.GenerateContentConfig(

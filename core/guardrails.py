@@ -49,7 +49,9 @@ def is_educational_and_safe(text: str) -> tuple[bool, str]:
             "Do not output any markdown formatting, backticks, or other text outside the raw JSON."
         )
         
-        response = client.models.generate_content(
+        from core.gemini_client import generate_content_with_retry
+        response = generate_content_with_retry(
+            client=client,
             model='gemini-2.5-flash',
             contents=f"User request: '{cleaned_text}'",
             config=types.GenerateContentConfig(
