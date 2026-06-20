@@ -1,0 +1,18 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+
+# Environment configurations
+.env
+
+# Local database
+*.db
+studybuddy.db
+
+# Streamlit configurations
+.streamlit/
