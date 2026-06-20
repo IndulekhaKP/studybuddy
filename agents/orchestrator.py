@@ -135,8 +135,8 @@ class StudyBuddyOrchestrator:
                     "topic": topic,
                     "subconcept": current_subconcept
                 })
-                # Fallback: If the topic is not found in the local knowledge base, use Google Search
-                if "error" in curriculum_notes:
+                # Fallback: If the topic or subconcept is not found in the local knowledge base, use Google Search
+                if "error" in curriculum_notes or "message" in curriculum_notes:
                     curriculum_notes = "USE_GOOGLE_SEARCH"
         
         # Tutor Agent generates explanation based on level and grounding
@@ -264,9 +264,9 @@ class StudyBuddyOrchestrator:
                 "explanation": "Consistent practice and active study are scientifically proven to be the most effective methods to master any academic topic."
             }]
 
-    def get_presentation_slides(self, pdf_text: str) -> list[dict]:
-        """Generates slide summaries from the uploaded PDF context."""
-        slides_json = self.tutor.generate_slides_summary(pdf_text)
+    def get_presentation_slides(self, context_text: str) -> list[dict]:
+        """Generates slide summaries from the educational context."""
+        slides_json = self.tutor.generate_slides_summary(context_text)
         try:
             return json.loads(slides_json)
         except Exception as e:

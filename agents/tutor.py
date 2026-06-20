@@ -84,14 +84,14 @@ class TutorAgent:
                 f"*(Note: An error occurred generating the custom explanation: {str(e)}. Let's practice with a quiz next!)*"
             )
 
-    def generate_slides_summary(self, pdf_text: str) -> str:
-        """Generates a JSON list of 5-7 slides summarizing key ideas from the PDF text."""
+    def generate_slides_summary(self, context_text: str) -> str:
+        """Generates a JSON list of 5-7 slides summarizing key ideas from the provided context."""
         from google.genai import types
         
         prompt = (
-            f"Analyze the following document text and summarize its key ideas into a presentation slide deck "
+            f"Analyze the following educational context and summarize its key ideas into a presentation slide deck "
             f"containing exactly 5 to 7 slides.\n\n"
-            f"Document Text:\n{pdf_text[:10000]}\n\n"
+            f"Educational Context:\n{context_text[:10000]}\n\n"
             f"Requirements:\n"
             f"- Return a valid JSON array of objects representing slides.\n"
             f"- Each object in the array must contain exactly 2 keys:\n"

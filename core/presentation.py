@@ -199,7 +199,7 @@ def generate_html_slides(slides_data: list[dict]) -> str:
             
             let pointsHtml = "";
             if (Array.isArray(slide.points)) {{
-                pointsHtml = "<ul>" + slide.points.map(p => `<li>${p}</li>`).join("") + "</ul>";
+                pointsHtml = "<ul>" + slide.points.map(p => `<li>${{p}}</li>`).join("") + "</ul>";
             }} else if (slide.content) {{
                 pointsHtml = `<p>${slide.content}</p>`;
             }}
