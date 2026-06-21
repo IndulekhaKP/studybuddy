@@ -9,6 +9,16 @@ from dataclasses import dataclass
 
 DEFAULT_MODEL = "openai/gpt-oss-20b"
 DEFAULT_BASE_URL = "https://api.groq.com/openai/v1/chat/completions"
+TASK_MODEL_DEFAULTS = {
+    "planner": "llama-3.1-8b-instant",
+    "tutor": "openai/gpt-oss-120b",
+    "quiz": "openai/gpt-oss-120b",
+    "evaluator": "llama-3.1-8b-instant",
+    "flashcards": "llama-3.1-8b-instant",
+    "guardrails": "llama-3.1-8b-instant",
+    "grounding": "llama-3.1-8b-instant",
+    "developer_notes": "llama-3.1-8b-instant",
+}
 
 
 @dataclass
@@ -20,7 +30,14 @@ def get_api_key() -> str:
     return os.getenv("GROQ_API_KEY", "").strip()
 
 
-def get_model(default: str = DEFAULT_MODEL) -> str:
+def get_model(task: str | None = None, default: str = DEFAULT_MODEL) -> str:
+    if task:
+        task_env = os.getenv(f"LLM_MODEL_{task.upper()}", "").strip()
+        if task_env:
+            return task_env
+        if task in TASK_MODEL_DEFAULTS:
+            return TASK_MODEL_DEFAULTS[task]
+
     model = os.getenv("LLM_MODEL", "").strip()
     return model or default
 
@@ -58,6 +75,7 @@ def generate_content_with_retry(
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0 StudyBuddy/1.0",
         },
         method="POST",
     )

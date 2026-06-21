@@ -20,7 +20,7 @@ class EvaluatorAgent:
     """
 
     def __init__(self):
-        self.model = get_model()
+        self.model = get_model(task="evaluator")
         self.instruction = (
             "You are an educational evaluator in charge of an adaptive learning engine. "
             "You assess a student's performance and determine their next curriculum step and level. "

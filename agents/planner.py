@@ -11,7 +11,7 @@ class PlannerAgent:
     """
     
     def __init__(self):
-        self.model = get_model()
+        self.model = get_model(task="planner")
         self.instruction = (
             "You are an academic curriculum planner. Given a topic, break it down into an ordered "
             "JSON list of 3 to 6 atomic, sequential sub-concepts (from easiest/foundation to hardest/advanced) "

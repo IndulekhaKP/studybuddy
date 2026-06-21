@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
-from core.llm_client import DEFAULT_MODEL
+from core.llm_client import DEFAULT_MODEL, TASK_MODEL_DEFAULTS
 
 # Load environment variables from .env
 load_dotenv()
@@ -348,17 +348,23 @@ def save_env_value(key: str, value: str) -> None:
 if _is_placeholder:
     st.warning("⚠️ A valid Groq API key was not found. Enter your `gsk_...` key to continue.")
     api_key_input = st.text_input("Enter your Groq API Key:", type="password", placeholder="gsk_...")
-    model_input = st.text_input("Model ID:", value=model_name, help="Default: openai/gpt-oss-20b")
+    model_input = st.text_input("Global fallback model ID:", value=model_name, help="Used only if no task-specific default is set.")
     if api_key_input and api_key_input.strip().startswith("gsk_"):
         try:
             save_env_value("GROQ_API_KEY", api_key_input.strip())
             save_env_value("LLM_MODEL", (model_input or DEFAULT_MODEL).strip())
+            for task_name, task_model in TASK_MODEL_DEFAULTS.items():
+                save_env_value(f"LLM_MODEL_{task_name.upper()}", task_model)
             os.environ["GROQ_API_KEY"] = api_key_input.strip()
             os.environ["LLM_MODEL"] = (model_input or DEFAULT_MODEL).strip()
+            for task_name, task_model in TASK_MODEL_DEFAULTS.items():
+                os.environ[f"LLM_MODEL_{task_name.upper()}"] = task_model
             st.success("✅ Groq API key and model saved to .env and loaded successfully!")
         except Exception:
             os.environ["GROQ_API_KEY"] = api_key_input.strip()
             os.environ["LLM_MODEL"] = (model_input or DEFAULT_MODEL).strip()
+            for task_name, task_model in TASK_MODEL_DEFAULTS.items():
+                os.environ[f"LLM_MODEL_{task_name.upper()}"] = task_model
             st.success("✅ Groq API key loaded successfully for this session!")
         st.rerun()
     elif api_key_input:

@@ -12,7 +12,7 @@ class FlashcardAgent:
     """
 
     def __init__(self):
-        self.model = get_model()
+        self.model = get_model(task="flashcards")
         self.instruction = (
             "You are an expert educational flashcard creator. "
             "Given a list of weak topics a student struggled with, you generate concise, "

@@ -1,3 +1,4 @@
+import json
 from core.llm_client import generate_content_with_retry, get_model
 
 class TutorAgent:
@@ -11,7 +12,7 @@ class TutorAgent:
     """
 
     def __init__(self):
-        self.model = get_model()
+        self.model = get_model(task="tutor")
         self.instruction = (
             "You are an adaptive, encouraging, and clear academic tutor. "
             "Your goal is to explain a specific sub-concept to a student based on their learning level "
@@ -28,6 +29,31 @@ class TutorAgent:
             "Back: [Brief definition or answer]\n"
             "[FLASHCARD]"
         )
+
+    def _format_fallback_notes(self, subconcept: str, curriculum_notes: str) -> str:
+        """Turn grounded notes into a readable fallback explanation."""
+        try:
+            data = json.loads(curriculum_notes)
+            notes = data.get("notes", "")
+            examples = data.get("examples", "")
+            matched = data.get("matched_subconcept", subconcept)
+            parts = [f"Let's learn about **{matched.title()}**!"]
+            if notes:
+                parts.append(notes)
+            if examples:
+                parts.append(f"**Example:** {examples}")
+            parts.append(
+                "[FLASHCARD]\n"
+                f"Front: What is {matched}?\n"
+                f"Back: {notes[:120].strip() if notes else 'A key concept in this lesson.'}\n"
+                "[FLASHCARD]"
+            )
+            return "\n\n".join(parts)
+        except Exception:
+            return (
+                f"Let's learn about **{subconcept}**!\n\n"
+                f"Reference Notes: {curriculum_notes}"
+            )
 
     def explain(self, subconcept: str, level: str, curriculum_notes: str) -> str:
         """Generates an explanation for the subconcept tailored to the student level.
@@ -53,10 +79,11 @@ class TutorAgent:
             return response.text.strip()
         except Exception as e:
             print(f"[TUTOR ERROR] Explanation generation failed: {e}")
+            fallback = self._format_fallback_notes(subconcept, curriculum_notes)
             return (
-                f"Let's learn about **{subconcept}**!\n\n"
-                f"Reference Notes: {curriculum_notes}\n\n"
-                f"*(Note: An error occurred generating the custom explanation: {str(e)}. Let's practice with a quiz next!)*"
+                f"{fallback}\n\n"
+                f"*(Note: An error occurred generating the custom explanation: {str(e)}. "
+                "Using grounded fallback notes instead.)*"
             )
 
     def generate_slides_summary(self, context_text: str) -> str:

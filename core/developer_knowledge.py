@@ -19,7 +19,7 @@ def query_developer_docs(query: str) -> str | None:
             f"Topic: {query}"
         )
         response = generate_content_with_retry(
-            model=get_model(),
+            model=get_model(task="developer_notes"),
             user_prompt=prompt,
             temperature=0.1,
         )

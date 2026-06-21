@@ -104,7 +104,7 @@ class StudyBuddyOrchestrator:
                     f"Document Text:\n{pdf_text}"
                 )
                 response = generate_content_with_retry(
-                    model=get_model(),
+                    model=get_model(task="grounding"),
                     user_prompt=prompt,
                     temperature=0.1,
                 )

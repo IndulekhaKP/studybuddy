@@ -11,7 +11,7 @@ class QuizAgent:
     """
 
     def __init__(self):
-        self.model = get_model()
+        self.model = get_model(task="quiz")
         self.instruction = (
             "You are an assessment designer and grader. "
             "Your role is two-fold:\n"

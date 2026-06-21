@@ -43,7 +43,7 @@ def is_educational_and_safe(text: str) -> tuple[bool, str]:
             "Do not output any markdown formatting, backticks, or other text outside the raw JSON."
         )
         response = generate_content_with_retry(
-            model=get_model(),
+            model=get_model(task="guardrails"),
             system_instruction=system_instruction,
             user_prompt=f"User request: '{cleaned_text}'",
             temperature=0.0,
