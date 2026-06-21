@@ -1,7 +1,5 @@
 import json
-from google.adk.agents import Agent
-from google.genai import Client
-from google.genai import types
+from core.llm_client import generate_content_with_retry, get_model
 
 class EvaluatorAgent:
     """Specialist Agent that handles the adaptive learning loop.
@@ -22,29 +20,24 @@ class EvaluatorAgent:
     """
 
     def __init__(self):
-        # Configure ADK Agent
-        self.adk_agent = Agent(
-            name="EvaluatorAgent",
-            model="gemini-2.0-flash",
-            instruction=(
-                "You are an educational evaluator in charge of an adaptive learning engine. "
-                "You assess a student's performance and determine their next curriculum step and level. "
-                "You must strictly follow this rubric:\n"
-                "1. If correct is true:\n"
-                "   - level is 'intermediate' -> action: 'advance', next_level: 'intermediate'\n"
-                "   - level is 'beginner' -> action: 'advance', next_level: 'intermediate'\n"
-                "2. If correct is false:\n"
-                "   - level is 'intermediate' -> action: 'repeat_simpler', next_level: 'beginner'\n"
-                "   - level is 'beginner' -> action: 'repeat_same', next_level: 'beginner'\n\n"
-                "You must return a JSON object with three keys:\n"
-                "- 'action': 'advance', 'repeat_simpler', or 'repeat_same'\n"
-                "- 'next_level': 'beginner' or 'intermediate'\n"
-                "- 'reasoning': string (brief summary explaining the transition to the student in a friendly way, "
-                "e.g. 'Great job! You mastered this, let's step up the challenge!' or 'No worries! Let's review this concept with a simpler explanation.').\n"
-                "Do not include any extra text or code block wrapping in the response."
-            )
+        self.model = get_model()
+        self.instruction = (
+            "You are an educational evaluator in charge of an adaptive learning engine. "
+            "You assess a student's performance and determine their next curriculum step and level. "
+            "You must strictly follow this rubric:\n"
+            "1. If correct is true:\n"
+            "   - level is 'intermediate' -> action: 'advance', next_level: 'intermediate'\n"
+            "   - level is 'beginner' -> action: 'advance', next_level: 'intermediate'\n"
+            "2. If correct is false:\n"
+            "   - level is 'intermediate' -> action: 'repeat_simpler', next_level: 'beginner'\n"
+            "   - level is 'beginner' -> action: 'repeat_same', next_level: 'beginner'\n\n"
+            "You must return a JSON object with three keys:\n"
+            "- 'action': 'advance', 'repeat_simpler', or 'repeat_same'\n"
+            "- 'next_level': 'beginner' or 'intermediate'\n"
+            "- 'reasoning': string (brief summary explaining the transition to the student in a friendly way, "
+            "e.g. 'Great job! You mastered this, let's step up the challenge!' or 'No worries! Let's review this concept with a simpler explanation.').\n"
+            "Do not include any extra text or code block wrapping in the response."
         )
-        self.client = Client()
 
     def evaluate(self, current_level: str, correct: bool, quiz_feedback: str) -> dict:
         """Evaluates student progress and outputs the next action and level.
@@ -63,15 +56,11 @@ class EvaluatorAgent:
         )
         
         try:
-            from core.gemini_client import generate_content_with_retry
             response = generate_content_with_retry(
-                client=self.client,
-                model=self.adk_agent.model,
-                contents=f"{self.adk_agent.instruction}\n\n{prompt}",
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.1
-                )
+                model=self.model,
+                system_instruction=self.instruction,
+                user_prompt=prompt,
+                temperature=0.1,
             )
             
             data = json.loads(response.text.strip())

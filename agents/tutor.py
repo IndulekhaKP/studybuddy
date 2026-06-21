@@ -1,5 +1,4 @@
-from google.adk.agents import Agent
-from google.genai import Client
+from core.llm_client import generate_content_with_retry, get_model
 
 class TutorAgent:
     """Specialist Agent that explains academic concepts.
@@ -12,28 +11,23 @@ class TutorAgent:
     """
 
     def __init__(self):
-        # Configure ADK Agent settings
-        self.adk_agent = Agent(
-            name="TutorAgent",
-            model="gemini-2.0-flash",
-            instruction=(
-                "You are an adaptive, encouraging, and clear academic tutor. "
-                "Your goal is to explain a specific sub-concept to a student based on their learning level "
-                "(beginner or intermediate) and reference curriculum notes provided for grounding. "
-                "You must strictly follow these structural requirements:\n"
-                "1. Keep the explanation short, clean, and easy to read.\n"
-                "2. Start with a vivid, relatable analogy (e.g. comparing computer memory to a post office).\n"
-                "3. Provide exactly one concrete worked-out example to reinforce the concept.\n"
-                "4. Tailor your tone: use simple words and intuitive explanations for 'beginner'; "
-                "use slightly more detailed, professional terminology and algebraic/formal examples for 'intermediate'.\n"
-                "5. At the very end of your response, add exactly 3 flashcards for study/review. Use this exact formatting for each card:\n"
-                "[FLASHCARD]\n"
-                "Front: [Key question or term]\n"
-                "Back: [Brief definition or answer]\n"
-                "[FLASHCARD]"
-            )
+        self.model = get_model()
+        self.instruction = (
+            "You are an adaptive, encouraging, and clear academic tutor. "
+            "Your goal is to explain a specific sub-concept to a student based on their learning level "
+            "(beginner or intermediate) and reference curriculum notes provided for grounding. "
+            "You must strictly follow these structural requirements:\n"
+            "1. Keep the explanation short, clean, and easy to read.\n"
+            "2. Start with a vivid, relatable analogy (e.g. comparing computer memory to a post office).\n"
+            "3. Provide exactly one concrete worked-out example to reinforce the concept.\n"
+            "4. Tailor your tone: use simple words and intuitive explanations for 'beginner'; "
+            "use slightly more detailed, professional terminology and algebraic/formal examples for 'intermediate'.\n"
+            "5. At the very end of your response, add exactly 3 flashcards for study/review. Use this exact formatting for each card:\n"
+            "[FLASHCARD]\n"
+            "Front: [Key question or term]\n"
+            "Back: [Brief definition or answer]\n"
+            "[FLASHCARD]"
         )
-        self.client = Client()
 
     def explain(self, subconcept: str, level: str, curriculum_notes: str) -> str:
         """Generates an explanation for the subconcept tailored to the student level.
@@ -43,25 +37,13 @@ class TutorAgent:
             level: The student's current level ('beginner' or 'intermediate').
             curriculum_notes: Reference grounding facts loaded from the curriculum tool.
         """
-        from google.genai import types
-        
         try:
-            from core.gemini_client import generate_content_with_retry
             if curriculum_notes == "USE_GOOGLE_SEARCH":
                 prompt = (
                     f"Concept to teach: '{subconcept}'\n"
                     f"Student learning level: {level}\n\n"
-                    f"You must use the Google Search tool to search for verified academic details "
-                    f"on this concept. Then, provide a clear explanation containing a relatable analogy "
-                    f"and a worked example based on those search results."
-                )
-                response = generate_content_with_retry(
-                    client=self.client,
-                    model=self.adk_agent.model,
-                    contents=f"{self.adk_agent.instruction}\n\n{prompt}",
-                    config=types.GenerateContentConfig(
-                        tools=[types.Tool(google_search=types.GoogleSearch())]
-                    )
+                    "No grounding notes were available from the local curriculum store. "
+                    "Use your general knowledge carefully, avoid making up niche facts, and focus on a clear foundational explanation."
                 )
             else:
                 prompt = (
@@ -70,11 +52,12 @@ class TutorAgent:
                     f"Grounding curriculum notes: {curriculum_notes}\n\n"
                     f"Provide a clear explanation with an analogy and a worked example."
                 )
-                response = generate_content_with_retry(
-                    client=self.client,
-                    model=self.adk_agent.model,
-                    contents=f"{self.adk_agent.instruction}\n\n{prompt}"
-                )
+            response = generate_content_with_retry(
+                model=self.model,
+                system_instruction=self.instruction,
+                user_prompt=prompt,
+                temperature=0.2,
+            )
             return response.text.strip()
         except Exception as e:
             print(f"[TUTOR ERROR] Explanation generation failed: {e}")
@@ -86,8 +69,6 @@ class TutorAgent:
 
     def generate_slides_summary(self, context_text: str) -> str:
         """Generates a JSON list of 5-7 slides summarizing key ideas from the provided context."""
-        from google.genai import types
-        
         prompt = (
             f"Analyze the following educational context and summarize its key ideas into a presentation slide deck "
             f"containing exactly 5 to 7 slides.\n\n"
@@ -102,15 +83,10 @@ class TutorAgent:
         )
         
         try:
-            from core.gemini_client import generate_content_with_retry
             response = generate_content_with_retry(
-                client=self.client,
-                model=self.adk_agent.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.2
-                )
+                model=self.model,
+                user_prompt=prompt,
+                temperature=0.2,
             )
             return response.text.strip()
         except Exception as e:

@@ -89,9 +89,10 @@ Copy the `.env.example` file to `.env`:
 ```bash
 copy .env.example .env
 ```
-Open `.env` and fill in your Gemini API key:
+Open `.env` and fill in your Groq API key:
 ```env
-GEMINI_API_KEY=AIzaSy...
+GROQ_API_KEY=gsk_...
+LLM_MODEL=openai/gpt-oss-20b
 ```
 
 ### 3. Run the Application

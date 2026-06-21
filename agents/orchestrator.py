@@ -6,6 +6,7 @@ from agents.quiz import QuizAgent
 from agents.evaluator import EvaluatorAgent
 from agents.flashcard_agent import FlashcardAgent
 from mcp_server.client import MCPClientHelper
+from core.llm_client import generate_content_with_retry, get_model
 
 class StudyBuddyOrchestrator:
     """Orchestrator Agent that manages the learning workflow.
@@ -96,19 +97,16 @@ class StudyBuddyOrchestrator:
         if pdf_text:
             # Dynamic Grounding: Extract only the document sections relevant to the current subconcept
             try:
-                from google.genai import Client
-                client = Client()
                 prompt = (
                     f"Read the following document text and extract the exact sentences, paragraphs, "
                     f"or facts that explain the sub-concept: '{current_subconcept}'. "
                     f"Provide only the relevant factual text as-is. Do not write summaries or explanations yourself.\n\n"
                     f"Document Text:\n{pdf_text}"
                 )
-                from core.gemini_client import generate_content_with_retry
                 response = generate_content_with_retry(
-                    client=client,
-                    model="gemini-2.0-flash",
-                    contents=prompt
+                    model=get_model(),
+                    user_prompt=prompt,
+                    temperature=0.1,
                 )
                 curriculum_notes = response.text.strip()
             except Exception as e:

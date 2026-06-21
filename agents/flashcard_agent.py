@@ -1,7 +1,5 @@
 import json
-from google.adk.agents import Agent
-from google.genai import Client
-from google.genai import types
+from core.llm_client import generate_content_with_retry, get_model
 
 
 class FlashcardAgent:
@@ -14,18 +12,14 @@ class FlashcardAgent:
     """
 
     def __init__(self):
-        self.adk_agent = Agent(
-            name="FlashcardAgent",
-            model="gemini-2.0-flash",
-            instruction=(
-                "You are an expert educational flashcard creator. "
-                "Given a list of weak topics a student struggled with, you generate concise, "
-                "high-quality flashcards to help them revise. "
-                "Each flashcard has a clear question on the front and a precise answer on the back. "
-                "Keep flashcard fronts under 15 words and backs under 30 words."
-            )
+        self.model = get_model()
+        self.instruction = (
+            "You are an expert educational flashcard creator. "
+            "Given a list of weak topics a student struggled with, you generate concise, "
+            "high-quality flashcards to help them revise. "
+            "Each flashcard has a clear question on the front and a precise answer on the back. "
+            "Keep flashcard fronts under 15 words and backs under 30 words."
         )
-        self.client = Client()
 
     def detect_weak_topics(self, history: list) -> list:
         """Scans session history and returns subconcepts where the student failed.
@@ -69,15 +63,11 @@ class FlashcardAgent:
         )
         
         try:
-            from core.gemini_client import generate_content_with_retry
             response = generate_content_with_retry(
-                client=self.client,
-                model=self.adk_agent.model,
-                contents=f"{self.adk_agent.instruction}\n\n{prompt}",
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.3
-                )
+                model=self.model,
+                system_instruction=self.instruction,
+                user_prompt=prompt,
+                temperature=0.3,
             )
             cards = json.loads(response.text.strip())
             if isinstance(cards, list):

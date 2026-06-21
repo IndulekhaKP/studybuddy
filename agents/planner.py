@@ -1,8 +1,5 @@
 import json
-import os
-from google.adk.agents import Agent
-from google.genai import Client
-from google.genai import types
+from core.llm_client import generate_content_with_retry, get_model
 
 class PlannerAgent:
     """Specialist Agent that structures the learning path.
@@ -14,20 +11,14 @@ class PlannerAgent:
     """
     
     def __init__(self):
-        # We define a google-adk Agent to encapsulate the persona and parameters
-        self.adk_agent = Agent(
-            name="PlannerAgent",
-            model="gemini-2.0-flash",
-            instruction=(
-                "You are an academic curriculum planner. Given a topic, break it down into an ordered "
-                "JSON list of 3 to 6 atomic, sequential sub-concepts (from easiest/foundation to hardest/advanced) "
-                "that a student must learn to master the topic. "
-                "Your response must be a valid JSON array of strings. Do not return markdown, do not use backticks, "
-                "and do not write anything else outside the JSON array."
-            )
+        self.model = get_model()
+        self.instruction = (
+            "You are an academic curriculum planner. Given a topic, break it down into an ordered "
+            "JSON list of 3 to 6 atomic, sequential sub-concepts (from easiest/foundation to hardest/advanced) "
+            "that a student must learn to master the topic. "
+            "Your response must be a valid JSON array of strings. Do not return markdown, do not use backticks, "
+            "and do not write anything else outside the JSON array."
         )
-        # We initialize the Gemini Client (uses GEMINI_API_KEY from environment)
-        self.client = Client()
 
     def plan(self, topic: str, pdf_context: str = None) -> list[str]:
         """Generates a learning path of sub-concepts for the given topic or PDF context.
@@ -48,20 +39,15 @@ class PlannerAgent:
             )
             prompt = f"Document Text:\n{pdf_context}\n\nBreak down this document into 3 to 6 key sequential concepts."
         else:
-            instruction = self.adk_agent.instruction
+            instruction = self.instruction
             prompt = f"Break down the topic: '{topic}'"
         
         try:
-            # We call the model with response_mime_type set to json to guarantee structured output
-            from core.gemini_client import generate_content_with_retry
             response = generate_content_with_retry(
-                client=self.client,
-                model=self.adk_agent.model,
-                contents=f"{instruction}\n\n{prompt}",
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.1
-                )
+                model=self.model,
+                system_instruction=instruction,
+                user_prompt=prompt,
+                temperature=0.1,
             )
             
             subconcepts = json.loads(response.text.strip())

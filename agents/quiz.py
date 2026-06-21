@@ -1,7 +1,5 @@
 import json
-from google.adk.agents import Agent
-from google.genai import Client
-from google.genai import types
+from core.llm_client import generate_content_with_retry, get_model
 
 class QuizAgent:
     """Specialist Agent that conducts assessments.
@@ -13,20 +11,15 @@ class QuizAgent:
     """
 
     def __init__(self):
-        # Configure ADK Agent
-        self.adk_agent = Agent(
-            name="QuizAgent",
-            model="gemini-2.0-flash",
-            instruction=(
-                "You are an assessment designer and grader. "
-                "Your role is two-fold:\n"
-                "1. Generate a single clear question (multiple-choice or short-answer) "
-                "to check understanding of a concept, matching the student's level.\n"
-                "2. Grade a student's answer, deciding if it is correct or incorrect, "
-                "and explain why in a supportive, constructive tone."
-            )
+        self.model = get_model()
+        self.instruction = (
+            "You are an assessment designer and grader. "
+            "Your role is two-fold:\n"
+            "1. Generate a single clear question (multiple-choice or short-answer) "
+            "to check understanding of a concept, matching the student's level.\n"
+            "2. Grade a student's answer, deciding if it is correct or incorrect, "
+            "and explain why in a supportive, constructive tone."
         )
-        self.client = Client()
 
     def generate_question(self, subconcept: str, level: str, explanation: str) -> str:
         """Generates a single multiple-choice question with 4 options and returns it as a JSON string.
@@ -36,8 +29,6 @@ class QuizAgent:
             level: The student's level ('beginner' or 'intermediate').
             explanation: The exact explanation the tutor agent just generated.
         """
-        from google.genai import types
-        
         prompt = (
             f"Generate one multiple-choice question (MCQ) to test the student's "
             f"understanding of the concept '{subconcept}' at a {level} level.\n"
@@ -52,15 +43,11 @@ class QuizAgent:
         )
         
         try:
-            from core.gemini_client import generate_content_with_retry
             response = generate_content_with_retry(
-                client=self.client,
-                model=self.adk_agent.model,
-                contents=f"{self.adk_agent.instruction}\n\n{prompt}",
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.1
-                )
+                model=self.model,
+                system_instruction=self.instruction,
+                user_prompt=prompt,
+                temperature=0.1,
             )
             return response.text.strip()
         except Exception as e:
@@ -90,8 +77,6 @@ class QuizAgent:
         Returns:
             List of question dicts, each with: question, options, correct_index, explanation
         """
-        from google.genai import types
-        
         prompt = (
             f"Generate exactly {n} multiple-choice questions (MCQs) to test the student's "
             f"understanding of the concept '{subconcept}' at a {level} level.\n"
@@ -108,15 +93,11 @@ class QuizAgent:
         )
         
         try:
-            from core.gemini_client import generate_content_with_retry
             response = generate_content_with_retry(
-                client=self.client,
-                model=self.adk_agent.model,
-                contents=f"{self.adk_agent.instruction}\n\n{prompt}",
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.2
-                )
+                model=self.model,
+                system_instruction=self.instruction,
+                user_prompt=prompt,
+                temperature=0.2,
             )
             questions = json.loads(response.text.strip())
             if isinstance(questions, list) and len(questions) >= 2:
@@ -177,8 +158,6 @@ class QuizAgent:
         Returns:
             A JSON string containing a list of 10 question dictionaries.
         """
-        from google.genai import types
-        
         prompt = (
             f"Generate a final course exam containing exactly 10 multiple-choice questions (MCQs) "
             f"covering the following subconcepts that the student has just learned:\n"
@@ -194,15 +173,11 @@ class QuizAgent:
         )
         
         try:
-            from core.gemini_client import generate_content_with_retry
             response = generate_content_with_retry(
-                client=self.client,
-                model=self.adk_agent.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=0.2
-                )
+                model=self.model,
+                system_instruction=self.instruction,
+                user_prompt=prompt,
+                temperature=0.2,
             )
             return response.text.strip()
         except Exception as e:

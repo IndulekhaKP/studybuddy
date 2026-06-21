@@ -26,7 +26,7 @@ kaggleproject/
 ├── mcp_server/
 │   └── client.py             # MCPClientHelper.call_tool() — wraps MCP tools
 ├── studybuddy.db             # SQLite database for session persistence
-├── .env                      # GEMINI_API_KEY lives here
+├── .env                      # GROQ_API_KEY and optional LLM_MODEL live here
 ├── requirements.txt          # pip dependencies
 └── PROJECT.md                # ← YOU ARE HERE (like CLAUDE.md)
 ```
@@ -174,6 +174,7 @@ app.py top-to-bottom:
 ## ⚙️ Environment
 - Runtime: Python 3.x + Streamlit
 - AI: Google Gemini 2.0 Flash via google-genai + google-adk SDK
-- Key env var: GEMINI_API_KEY in .env
+- Key env var: GROQ_API_KEY in .env
+- Optional model override: LLM_MODEL in .env (default: openai/gpt-oss-20b)
 - Run command: `streamlit run app.py` from /home/jaswanth/kaggleproject/
 - Dependencies: see requirements.txt

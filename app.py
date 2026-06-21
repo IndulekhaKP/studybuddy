@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 from dotenv import load_dotenv
+from core.llm_client import DEFAULT_MODEL
 
 # Load environment variables from .env
 load_dotenv()
@@ -317,25 +318,52 @@ else:
     </style>
     """, unsafe_allow_html=True)
 
-# Safety check for Gemini API key
-api_key = os.getenv("GEMINI_API_KEY")
-_is_placeholder = not api_key or api_key.strip() == "your_gemini_api_key_here" or not api_key.strip().startswith("AIza")
+# Safety check for Groq API key
+api_key = os.getenv("GROQ_API_KEY")
+model_name = os.getenv("LLM_MODEL", DEFAULT_MODEL)
+_is_placeholder = not api_key or not api_key.strip().startswith("gsk_")
+
+
+def save_env_value(key: str, value: str) -> None:
+    env_path = ".env"
+    lines = []
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+    updated = False
+    for idx, line in enumerate(lines):
+        if line.strip().startswith(f"{key}="):
+            lines[idx] = f"{key}={value}\n"
+            updated = True
+            break
+
+    if not updated:
+        lines.append(f"{key}={value}\n")
+
+    with open(env_path, "w", encoding="utf-8") as f:
+        f.writelines(lines)
+
+
 if _is_placeholder:
-    st.warning("⚠️ A valid GEMINI_API_KEY was not found. Please enter your key below.")
-    api_key_input = st.text_input("Enter your Gemini API Key:", type="password", placeholder="AIzaSy...")
-    if api_key_input and api_key_input.strip().startswith("AIza"):
+    st.warning("⚠️ A valid Groq API key was not found. Enter your `gsk_...` key to continue.")
+    api_key_input = st.text_input("Enter your Groq API Key:", type="password", placeholder="gsk_...")
+    model_input = st.text_input("Model ID:", value=model_name, help="Default: openai/gpt-oss-20b")
+    if api_key_input and api_key_input.strip().startswith("gsk_"):
         try:
-            with open(".env", "w") as f:
-                f.write(f"GEMINI_API_KEY={api_key_input.strip()}\n")
-            os.environ["GEMINI_API_KEY"] = api_key_input.strip()
-            st.success("✅ API Key saved to .env and loaded successfully!")
+            save_env_value("GROQ_API_KEY", api_key_input.strip())
+            save_env_value("LLM_MODEL", (model_input or DEFAULT_MODEL).strip())
+            os.environ["GROQ_API_KEY"] = api_key_input.strip()
+            os.environ["LLM_MODEL"] = (model_input or DEFAULT_MODEL).strip()
+            st.success("✅ Groq API key and model saved to .env and loaded successfully!")
         except Exception:
-            os.environ["GEMINI_API_KEY"] = api_key_input.strip()
-            st.success("✅ API Key loaded successfully for this session!")
+            os.environ["GROQ_API_KEY"] = api_key_input.strip()
+            os.environ["LLM_MODEL"] = (model_input or DEFAULT_MODEL).strip()
+            st.success("✅ Groq API key loaded successfully for this session!")
         st.rerun()
     elif api_key_input:
-        st.error("❌ That doesn't look like a valid Gemini API key. It should start with 'AIza'.")
-    st.info("💡 Get a free key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)")
+        st.error("❌ That doesn't look like a valid Groq API key. It should start with `gsk_`.")
+    st.info("💡 Create a Groq key at [console.groq.com/keys](https://console.groq.com/keys)")
     st.stop()
 
 # Now import orchestrator and guardrails safely
