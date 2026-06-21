@@ -135,9 +135,13 @@ class StudyBuddyOrchestrator:
                     "topic": topic,
                     "subconcept": current_subconcept
                 })
-                # Fallback: If the topic or subconcept is not found in the local knowledge base, use Google Search
-                if "error" in curriculum_notes or "message" in curriculum_notes:
-                    curriculum_notes = "USE_GOOGLE_SEARCH"
+                # Fallback only if the topic itself is missing from the knowledge base.
+                if "error" in curriculum_notes:
+                    curriculum_notes = (
+                        f"Topic: {topic}\n"
+                        f"Subconcept: {current_subconcept}\n"
+                        "No local curriculum notes were found. Provide a careful, foundational explanation."
+                    )
         
         # Tutor Agent generates explanation based on level and grounding
         explanation = self.tutor.explain(current_subconcept, level, curriculum_notes)

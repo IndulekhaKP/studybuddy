@@ -38,20 +38,12 @@ class TutorAgent:
             curriculum_notes: Reference grounding facts loaded from the curriculum tool.
         """
         try:
-            if curriculum_notes == "USE_GOOGLE_SEARCH":
-                prompt = (
-                    f"Concept to teach: '{subconcept}'\n"
-                    f"Student learning level: {level}\n\n"
-                    "No grounding notes were available from the local curriculum store. "
-                    "Use your general knowledge carefully, avoid making up niche facts, and focus on a clear foundational explanation."
-                )
-            else:
-                prompt = (
-                    f"Concept to teach: '{subconcept}'\n"
-                    f"Student learning level: {level}\n"
-                    f"Grounding curriculum notes: {curriculum_notes}\n\n"
-                    f"Provide a clear explanation with an analogy and a worked example."
-                )
+            prompt = (
+                f"Concept to teach: '{subconcept}'\n"
+                f"Student learning level: {level}\n"
+                f"Grounding curriculum notes: {curriculum_notes}\n\n"
+                f"Provide a clear explanation with an analogy and a worked example."
+            )
             response = generate_content_with_retry(
                 model=self.model,
                 system_instruction=self.instruction,

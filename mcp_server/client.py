@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 import json
+import re
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.client.sse import sse_client
@@ -86,6 +87,34 @@ class MCPClientHelper:
     def execute_local_fallback(cls, tool_name: str, arguments: dict) -> str:
         """Executes database and KB lookups locally to ensure app reliability."""
         from core.storage import save_progress, load_progress
+
+        def normalize_text(text: str) -> str:
+            return re.sub(r"[^a-z0-9\s]+", " ", text.lower()).strip()
+
+        def find_best_subconcept_match(topic_entries: dict, subconcept_text: str):
+            s_key = normalize_text(subconcept_text)
+            s_tokens = {token for token in s_key.split() if len(token) > 2}
+            best_key = None
+            best_value = None
+            best_score = -1
+
+            for key, value in topic_entries.items():
+                k_key = normalize_text(key)
+                k_tokens = {token for token in k_key.split() if len(token) > 2}
+
+                score = 0
+                if s_key and (s_key in k_key or k_key in s_key):
+                    score += 5
+                score += len(s_tokens & k_tokens) * 2
+                if key.lower() in {"definition", "overview", "introduction"}:
+                    score += 1
+
+                if score > best_score:
+                    best_key = key
+                    best_value = value
+                    best_score = score
+
+            return best_key, best_value, best_score
         
         if tool_name == "save_progress":
             session_id = arguments.get("session_id")
@@ -116,13 +145,20 @@ class MCPClientHelper:
                     with open(kb_path, "r", encoding="utf-8") as f:
                         kb = json.load(f)
                     if topic in kb:
-                        for sub_name, data in kb[topic].items():
-                            if subconcept in sub_name.lower() or sub_name.lower() in subconcept:
-                                return json.dumps(data)
-                        return json.dumps({
-                            "message": f"Subconcept '{subconcept}' not found for topic '{topic}'.",
-                            "available_subconcepts": list(kb[topic].keys())
-                        })
+                        topic_entries = kb[topic]
+                        best_key, best_value, best_score = find_best_subconcept_match(topic_entries, subconcept)
+                        if best_value and best_score > 0:
+                            result = dict(best_value)
+                            result["matched_subconcept"] = best_key
+                            return json.dumps(result)
+
+                        fallback_key = next(iter(topic_entries.keys()))
+                        fallback_value = dict(topic_entries[fallback_key])
+                        fallback_value["matched_subconcept"] = fallback_key
+                        fallback_value["fallback_reason"] = (
+                            f"No close subconcept match found for '{subconcept}'. Using topic overview from '{fallback_key}'."
+                        )
+                        return json.dumps(fallback_value)
                 except Exception as err:
                     return json.dumps({"error": f"Error loading local KB: {err}"})
                     

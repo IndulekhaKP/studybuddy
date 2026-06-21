@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+import re
 from mcp.server.fastmcp import FastMCP
 
 # Ensure parent directory is in sys.path so we can import from core.storage
@@ -25,6 +26,39 @@ def load_kb():
             print(f"Error loading knowledge base JSON: {e}")
     return {}
 
+
+def _normalize_text(text: str) -> str:
+    return re.sub(r"[^a-z0-9\s]+", " ", text.lower()).strip()
+
+
+def _find_best_subconcept_match(topic_entries: dict, subconcept: str):
+    """Returns the closest matching KB entry for a generated subconcept label."""
+    s_key = _normalize_text(subconcept)
+    s_tokens = {token for token in s_key.split() if len(token) > 2}
+    best_key = None
+    best_value = None
+    best_score = -1
+
+    for key, value in topic_entries.items():
+        k_key = _normalize_text(key)
+        k_tokens = {token for token in k_key.split() if len(token) > 2}
+
+        score = 0
+        if s_key and (s_key in k_key or k_key in s_key):
+            score += 5
+        score += len(s_tokens & k_tokens) * 2
+
+        # If the generated subconcept repeats the main topic, prefer a definition-like entry.
+        if key.lower() in {"definition", "overview", "introduction"}:
+            score += 1
+
+        if score > best_score:
+            best_key = key
+            best_value = value
+            best_score = score
+
+    return best_key, best_value, best_score
+
 @mcp.tool()
 def get_curriculum_content(topic: str, subconcept: str) -> str:
     """Retrieves educational notes and examples for a given subconcept of a topic.
@@ -37,19 +71,24 @@ def get_curriculum_content(topic: str, subconcept: str) -> str:
     """
     kb = load_kb()
     t_key = topic.lower().strip()
-    s_key = subconcept.lower().strip()
     
     if t_key in kb:
-        # Look for subconcept matching in keys
-        for key, value in kb[t_key].items():
-            if s_key in key.lower() or key.lower() in s_key:
-                return json.dumps(value, indent=2)
-        
-        # Topic found but not this specific subconcept. Return available subconcepts as options
-        return json.dumps({
-            "message": f"Subconcept '{subconcept}' not found for topic '{topic}'.",
-            "available_subconcepts": list(kb[t_key].keys())
-        })
+        topic_entries = kb[t_key]
+        best_key, best_value, best_score = _find_best_subconcept_match(topic_entries, subconcept)
+
+        if best_value and best_score > 0:
+            result = dict(best_value)
+            result["matched_subconcept"] = best_key
+            return json.dumps(result, indent=2)
+
+        # Fall back to the first available topic entry so we stay grounded locally.
+        fallback_key = next(iter(topic_entries.keys()))
+        fallback_value = dict(topic_entries[fallback_key])
+        fallback_value["matched_subconcept"] = fallback_key
+        fallback_value["fallback_reason"] = (
+            f"No close subconcept match found for '{subconcept}'. Using topic overview from '{fallback_key}'."
+        )
+        return json.dumps(fallback_value, indent=2)
         
     return json.dumps({
         "error": f"Topic '{topic}' is not in the curriculum knowledge base.",
