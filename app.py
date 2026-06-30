@@ -613,6 +613,92 @@ def build_focus_timer_html(remaining_seconds: int, total_seconds: int, label: st
     </script>
     """
 
+def build_rain_player_html() -> str:
+    return """
+    <div style="font-family: Inter, sans-serif; background: #FFFFFF; border: 1px solid #DBEAFE; border-radius: 18px; padding: 16px; box-shadow: 0 12px 28px rgba(59,130,246,0.10);">
+        <div style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #64748B; margin-bottom: 6px;">Cozy Rain</div>
+        <div style="font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 10px;">Study ambience</div>
+        <div style="font-size: 12px; color: #64748B; margin-bottom: 12px;">Press play for a soft rain loop while you read.</div>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom: 12px;">
+            <button id="rain-play" style="background:#DBEAFE;color:#111827;border:1px solid #BFDBFE;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;">Play</button>
+            <button id="rain-stop" style="background:#F8FAFC;color:#111827;border:1px solid #BFDBFE;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;">Pause</button>
+        </div>
+        <div style="height:8px;background:#E2E8F0;border-radius:999px;overflow:hidden;">
+            <div id="rain-bar" style="width:0%;height:100%;background:#60A5FA;border-radius:999px;"></div>
+        </div>
+    </div>
+    <script>
+      const playBtn = document.getElementById('rain-play');
+      const stopBtn = document.getElementById('rain-stop');
+      const bar = document.getElementById('rain-bar');
+      let audioCtx = null;
+      let noiseSource = null;
+      let gainNode = null;
+      let animation = null;
+      let playing = false;
+
+      function buildNoiseBuffer(ctx, seconds = 4) {
+        const buffer = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.85;
+        }
+        return buffer;
+      }
+
+      function startRain() {
+        if (playing) return;
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createBufferSource();
+        const highpass = audioCtx.createBiquadFilter();
+        const lowpass = audioCtx.createBiquadFilter();
+        gainNode = audioCtx.createGain();
+
+        source.buffer = buildNoiseBuffer(audioCtx, 4);
+        source.loop = true;
+        highpass.type = 'highpass';
+        highpass.frequency.value = 450;
+        lowpass.type = 'lowpass';
+        lowpass.frequency.value = 1800;
+        gainNode.gain.value = 0.045;
+
+        source.connect(highpass);
+        highpass.connect(lowpass);
+        lowpass.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        source.start();
+        noiseSource = source;
+        playing = true;
+        playBtn.textContent = 'Playing';
+        bar.style.width = '100%';
+        bar.style.opacity = '0.8';
+        if (animation) cancelAnimationFrame(animation);
+      }
+
+      function stopRain() {
+        if (noiseSource) {
+          try { noiseSource.stop(); } catch (e) {}
+          try { noiseSource.disconnect(); } catch (e) {}
+          noiseSource = null;
+        }
+        playing = false;
+        playBtn.textContent = 'Play';
+        bar.style.width = '0%';
+        bar.style.opacity = '1';
+      }
+
+      playBtn.addEventListener('click', async () => {
+        if (!playing) {
+          startRain();
+        }
+      });
+
+      stopBtn.addEventListener('click', () => {
+        stopRain();
+      });
+    </script>
+    """
+
 def normalize_lesson_math(text: str) -> str:
     if not text:
         return text
@@ -661,6 +747,55 @@ if st.sidebar.button(theme_btn_label, key="theme_toggle_btn"):
     st.rerun()
 st.sidebar.write("---")
 
+st.sidebar.markdown("### Kairu Focus")
+focus_col_a, focus_col_b = st.sidebar.columns(2)
+with focus_col_a:
+    if st.button("30 min", key="focus_30_min"):
+        start_focus_session(30, "Focused 30")
+        st.rerun()
+with focus_col_b:
+    if st.button("5 min", key="focus_5_min"):
+        start_focus_session(5, "Quick 5")
+        st.rerun()
+
+focus_active_or_paused = st.session_state.get("focus_mode") in {"active", "paused"}
+if focus_active_or_paused:
+    remaining = remaining_focus_seconds()
+    total_seconds = int((st.session_state.focus_duration_minutes or 0) * 60)
+    focus_label = st.session_state.focus_label or "Focus Session"
+    is_paused = st.session_state.get("focus_mode") == "paused"
+    if remaining <= 0:
+        st.success("Kairu session complete. Take a short break.")
+    else:
+        import streamlit.components.v1 as components
+        components.html(
+            build_focus_timer_html(remaining, total_seconds, focus_label, paused=is_paused),
+            height=280,
+        )
+    stop_col_a, stop_col_b = st.sidebar.columns(2)
+    with stop_col_a:
+        if is_paused:
+            if st.button("Resume", key="focus_resume"):
+                resume_focus_session()
+                st.rerun()
+        else:
+            if st.button("Pause", key="focus_pause"):
+                pause_focus_session()
+                st.rerun()
+    with stop_col_b:
+        if st.button("Reset", key="focus_reset"):
+            reset_focus_session()
+            st.rerun()
+else:
+    st.sidebar.caption("Start a 30 minute deep-work block or a 5 minute sprint.")
+
+st.sidebar.write("---")
+
+st.sidebar.markdown("### Cozy Rain")
+import streamlit.components.v1 as components
+components.html(build_rain_player_html(), height=190)
+st.sidebar.write("---")
+
 if st.session_state.state:
     state = st.session_state.state
     
@@ -697,49 +832,6 @@ if st.session_state.state:
             
     st.sidebar.write("---")
 
-    st.sidebar.markdown("### Kairu Focus")
-    focus_col_a, focus_col_b = st.sidebar.columns(2)
-    with focus_col_a:
-        if st.button("30 min", key="focus_30_min"):
-            start_focus_session(30, "Focused 30")
-            st.rerun()
-    with focus_col_b:
-        if st.button("5 min", key="focus_5_min"):
-            start_focus_session(5, "Quick 5")
-            st.rerun()
-
-    focus_active_or_paused = st.session_state.get("focus_mode") in {"active", "paused"}
-    if focus_active_or_paused:
-        remaining = remaining_focus_seconds()
-        total_seconds = int((st.session_state.focus_duration_minutes or 0) * 60)
-        focus_label = st.session_state.focus_label or "Focus Session"
-        is_paused = st.session_state.get("focus_mode") == "paused"
-        if remaining <= 0:
-            st.success("Kairu session complete. Take a short break.")
-        else:
-            import streamlit.components.v1 as components
-            components.html(
-                build_focus_timer_html(remaining, total_seconds, focus_label, paused=is_paused),
-                height=280,
-            )
-        stop_col_a, stop_col_b = st.sidebar.columns(2)
-        with stop_col_a:
-            if is_paused:
-                if st.button("Resume", key="focus_resume"):
-                    resume_focus_session()
-                    st.rerun()
-            else:
-                if st.button("Pause", key="focus_pause"):
-                    pause_focus_session()
-                    st.rerun()
-        with stop_col_b:
-            if st.button("Reset", key="focus_reset"):
-                reset_focus_session()
-                st.rerun()
-    else:
-        st.sidebar.caption("Start a 30 minute deep-work block or a 5 minute sprint.")
-    st.sidebar.write("---")
-    
     st.sidebar.caption(f"Session: `{state['session_id']}`")
     if st.sidebar.button("🔄 Study New Topic"):
         reset_session()
