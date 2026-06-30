@@ -1,4 +1,4 @@
-# 📚 StudyBuddy — Project Reference Map (PROJECT.md)
+# NOVA — Project Reference Map (PROJECT.md)
 
 > _This file is the single source of truth for the codebase layout, agent responsibilities, and change guide.
 > Think of it like a CLAUDE.md — always read this before editing anything._
@@ -9,7 +9,7 @@
 
 ```
 kaggleproject/
-├── app.py                    # ★ MAIN FILE — Streamlit UI, CSS themes, all page logic (~1010 lines)
+├── app.py                    # ★ MAIN FILE — Streamlit UI, CSS themes, all page logic (~1150 lines)
 ├── agents/
 │   ├── orchestrator.py       # Coordinates all sub-agents; session flow controller
 │   ├── quiz.py               # QuizAgent — generates MCQ questions & grades answers
@@ -17,12 +17,12 @@ kaggleproject/
 │   ├── planner.py            # PlannerAgent — generates subconcept learning path
 │   └── evaluator.py          # EvaluatorAgent — decides advance/repeat/simplify after each quiz
 ├── core/
-│   ├── gemini_client.py      # Shared Gemini API client with retry logic
+│   ├── llm_client.py         # Shared Groq/OpenAI-compatible client with retry logic
 │   ├── guardrails.py         # Input sanitization & topic safety check
 │   ├── storage.py            # DB helpers (SQLite via studybuddy.db)
 │   ├── pdf_processor.py      # extract_text_from_pdf() — PyMuPDF based
 │   ├── presentation.py       # generate_html_slides() — builds downloadable HTML slideshow
-│   └── developer_knowledge.py # Google Developer Knowledge API query helper
+│   └── developer_knowledge.py # Lightweight developer grounding notes helper
 ├── mcp_server/
 │   └── client.py             # MCPClientHelper.call_tool() — wraps MCP tools
 ├── studybuddy.db             # SQLite database for session persistence
@@ -40,7 +40,7 @@ kaggleproject/
 - Toggled via `st.session_state.theme`; CSS injected at top of app.py
 - Light CSS block: lines 14–161 | Dark CSS block: lines 163–310
 
-### CSS Classes to Edit for Autumn Glow
+### CSS Classes to Edit for NOVA
 | Class | Location | Purpose |
 |---|---|---|
 | `.main-title` | ~L29, L178 | Page header gradient text |
@@ -52,19 +52,20 @@ kaggleproject/
 | `section[data-testid="stSidebar"]` | ~L39, L188 | Sidebar background |
 | `.badge-beginner` / `.badge-intermediate` | ~L56, L205 | Level badges |
 
-### Autumn Glow Palette
+### NOVA Palette
 ```
-Primary:    #FF6F20  (burnt orange)
-Secondary:  #C65D3B  (terracotta)
-Warm gold:  #F2C94C  (golden yellow)
-Sand:       #D9B68C  (warm sand)
-Dark brown: #A65E2E  (deep mahogany)
+Primary:    #1F2937  (charcoal)
+Secondary:  #475569  (slate)
+Accent:     #94A3B8  (cool gray)
+Surface:    #F8FAFC  (soft white)
+Border:     #E2E8F0  (light slate)
 Fonts:      Playfair Display (headings) + Inter (body)
 ```
 
 ### Flashcard Colors (app.py lines 828–847)
-- Light theme: front=white/slate, back=indigo gradient → change to amber/orange Autumn Glow
-- Dark theme: front=dark-slate, back=purple gradient → change to terracotta/golden
+- Light theme: front=white/slate, back=slate gradient
+- Dark theme: front=midnight/slate, back=slate gradient
+- Flashcards no longer render in the lesson stage; they appear only after quiz review if the learner missed anything.
 
 ---
 
@@ -122,6 +123,13 @@ Fonts:      Playfair Display (headings) + Inter (body)
 | `quiz_round_idx` | int | Which Q in the round we're on (0,1,2) (NEW) |
 | `quiz_round_results` | list | List of bool results for current round (NEW) |
 | `smart_flashcards` | list | FlashcardAgent-generated {front,back} dicts (NEW) |
+| `concept_stage` | str | Current flow stage: lesson, quiz, review |
+| `review_concept` | str | Concept being reviewed after quiz submission |
+| `focus_mode` | str | Kairu timer state |
+| `focus_started_at` | float | Unix timestamp when focus session starts |
+| `focus_ends_at` | float | Unix timestamp when focus session ends |
+| `focus_duration_minutes` | int | Current Kairu duration |
+| `focus_label` | str | Label for the active Kairu session |
 | `orchestrator` | obj | Singleton orchestrator instance |
 
 ---
@@ -133,47 +141,56 @@ app.py top-to-bottom:
 1. CSS injection (theme) — lines 13–310
 2. API key safety check — lines 312–331
 3. Import orchestrator + guardrails — lines 334–341
-4. Session state initialization — lines 343–370
-5. Helper functions: reset_session(), parse_flashcards() — lines 361–398
-6. SIDEBAR rendering — lines 400–476
-7. MAIN PANEL — lines 478+
+4. Session state initialization — lines 343–410
+5. Helper functions: reset_session(), reset_concept_flow(), parse_flashcards(), focus helpers — lines 411–520
+6. SIDEBAR rendering — lines 522–650
+7. MAIN PANEL — lines 652+
    ├── if not state → Setup Page (topic form / PDF upload)
    └── else → Active Learning Page
        ├── Progress bar
-       ├── if completed → Final Exam section (lines 591–796)
-       └── else → col_lesson | col_quiz layout (lines 802–1010)
-           ├── col_lesson: Tutor explanation + regular flashcards
-           └── col_quiz: MCQ radio + submit + grading result
+       ├── if completed → Final Exam section with answer key review
+       └── else → staged lesson/quiz/review flow
+           ├── lesson stage: explanation only
+           ├── quiz stage: 3-question round
+           └── review stage: evaluator feedback + mistake flashcards + next concept
 ```
+
+### Sidebar Modules
+- `Aura Tracker`: shows completed topics out of total subconcepts plus a simple aura status
+- `Kairu Focus`: 30-minute and 5-minute focus sessions with a countdown display
+- Slide presentation download remains available
+- Mistake flashcard download now appears in the review step, not the sidebar
 
 ---
 
 ## ✅ Planned / Completed Changes
 
-### 1. UI Agent — Autumn Glow Theme
-- Files: `app.py` (CSS lines 14–310, flashcard HTML lines 828–847)
-- Replace all color references with Autumn Glow palette
-- Change fonts: Lora + Plus Jakarta Sans → Playfair Display + Inter
-- Update title, buttons, cards, sidebar, badges
-- Bold + uppercase headings, updated welcome copy
+### 1. UI Agent — NOVA Theme
+- Files: `app.py`
+- Replace warm accent-heavy styling with a minimal slate palette
+- Rename visible branding to NOVA
+- Add sidebar Aura Tracker and Kairu focus timer
+- Keep the layout calm, professional, and functional
+- Simplify the setup page into a more student-friendly onboarding screen
 
 ### 2. Quiz Agent — 2-3 Questions Per Topic
 - Files: `agents/quiz.py`, `agents/orchestrator.py`, `app.py` (lines 943–1010)
 - Add `generate_questions_batch()` to QuizAgent (returns 2-3 MCQs)
 - Session state: quiz_round, quiz_round_idx, quiz_round_results
 - Pass logic: ≥2/3 correct → advance; else repeat
+- Final exam includes an explicit answer-key review after completion
 
 ### 3. Flashcard Agent — Smart Mistake Flashcards + Download
 - Files: `agents/flashcard_agent.py` (NEW), `agents/orchestrator.py`, `app.py`
 - FlashcardAgent detects wrong-answer topics and generates targeted flashcards
-- HTML flip-card deck downloadable from sidebar
-- Trigger: after each failed quiz round or on demand
+- HTML flip-card deck downloadable in the review step
+- Trigger: after each quiz round if the learner misses any questions
 
 ---
 
 ## ⚙️ Environment
 - Runtime: Python 3.x + Streamlit
-- AI: Google Gemini 2.0 Flash via google-genai + google-adk SDK
+- AI: Groq OpenAI-compatible API via `core/llm_client.py`
 - Key env var: GROQ_API_KEY in .env
 - Optional model override: LLM_MODEL in .env (default: openai/gpt-oss-20b)
 - Run command: `streamlit run app.py` from /home/jaswanth/kaggleproject/

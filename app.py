@@ -27,6 +27,9 @@ if st.session_state.theme == "light":
         .stApp p, .stApp span, .stApp label, .stApp li {
             color: #334155 !important;
         }
+        .stApp button, .stApp input, .stApp textarea, .stApp select {
+            font-family: 'Inter', sans-serif !important;
+        }
         
         .main-title {
             font-size: 3.2rem;
@@ -44,6 +47,10 @@ if st.session_state.theme == "light":
         }
         section[data-testid="stSidebar"] .stMarkdown p {
             color: #334155 !important;
+        }
+        section[data-testid="stSidebar"] .stButton>button,
+        section[data-testid="stSidebar"] .stDownloadButton>button {
+            color: #F8FAFC !important;
         }
         
         .badge {
@@ -128,7 +135,7 @@ if st.session_state.theme == "light":
         
         .stButton>button {
             background: linear-gradient(90deg, #1F2937 0%, #475569 100%) !important;
-            color: white !important;
+            color: #F8FAFC !important;
             border: none !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
@@ -146,7 +153,7 @@ if st.session_state.theme == "light":
         
         .stDownloadButton>button {
             background: linear-gradient(90deg, #64748B 0%, #94A3B8 100%) !important;
-            color: white !important;
+            color: #F8FAFC !important;
             border: none !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
@@ -180,6 +187,9 @@ else:
         .stApp p, .stApp span, .stApp label, .stApp li {
             color: #CBD5E1 !important;
         }
+        .stApp button, .stApp input, .stApp textarea, .stApp select {
+            font-family: 'Inter', sans-serif !important;
+        }
         
         .main-title {
             font-size: 3.2rem;
@@ -197,6 +207,10 @@ else:
         }
         section[data-testid="stSidebar"] .stMarkdown p {
             color: #CBD5E1 !important;
+        }
+        section[data-testid="stSidebar"] .stButton>button,
+        section[data-testid="stSidebar"] .stDownloadButton>button {
+            color: #F8FAFC !important;
         }
         
         .badge {
@@ -281,7 +295,7 @@ else:
         
         .stButton>button {
             background: linear-gradient(90deg, #FF6F20 0%, #C65D3B 100%) !important;
-            color: white !important;
+            color: #F8FAFC !important;
             border: none !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
@@ -299,7 +313,7 @@ else:
         
         .stDownloadButton>button {
             background: linear-gradient(90deg, #F2C94C 0%, #A65E2E 100%) !important;
-            color: white !important;
+            color: #F8FAFC !important;
             border: none !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
@@ -674,7 +688,20 @@ if st.session_state.state:
 
 if not st.session_state.state:
     # Setup Page
-    st.write("Welcome to NOVA — a calm, focused study space. Enter a topic or upload a PDF chapter below, and NOVA will shape a personalized learning path that adapts to your pace in real time.")
+    intro_text = "Welcome to NOVA, a calm study space for one concept at a time."
+    sub_text = "Choose a topic or upload a chapter. NOVA will guide you through a lesson, a short quiz, and a clean review flow."
+    muted = "#64748B" if st.session_state.theme == "light" else "#94A3B8"
+    title_color = "#0F172A" if st.session_state.theme == "light" else "#F8FAFC"
+    st.markdown(
+        f"""
+        <div style="max-width: 900px; margin: 0 0 1.25rem 0;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.14em; color: {muted}; margin-bottom: 0.35rem;">NOVA</div>
+            <div style="font-family: 'Playfair Display', serif; font-size: 2.1rem; line-height: 1.15; color: {title_color}; font-weight: 800; margin-bottom: 0.55rem;">{intro_text}</div>
+            <div style="font-size: 1rem; line-height: 1.75; color: {muted}; max-width: 760px;">{sub_text}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     
     # Mode Selection
     mode = st.radio("Choose how you want to learn:", ["Study by Topic Name", "Study from an uploaded PDF Document"])
@@ -691,7 +718,7 @@ if not st.session_state.state:
             )
             submit_btn = st.form_submit_button("🚀 Generate Personalized Path")
             
-        st.markdown("### 💡 Try these seeded topics for instant curriculum lookup:")
+        st.markdown("### Quick topics")
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("🍰 Fractions"):
@@ -848,6 +875,12 @@ else:
                 if score >= 7:
                     st.success("🎉 Congratulations! You passed the course!")
                     
+                    st.markdown("### Answer Key")
+                    for idx, r in enumerate(graded):
+                        with st.expander(f"Answer {idx+1}: {r['question']}", expanded=False):
+                            st.write(f"**Correct Answer:** {r['correct_answer']}")
+                            st.caption(f"*Rationale: {r['explanation']}*")
+                    
                     # Generate Certificate HTML
                     cert_html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1001,7 +1034,7 @@ else:
     else:
         explanation = st.session_state.explanation
 
-    clean_exp, flashcards = parse_flashcards(explanation)
+    clean_exp, _ = parse_flashcards(explanation)
     current_stage = st.session_state.get("concept_stage", "lesson")
 
     if current_stage == "lesson":
@@ -1009,126 +1042,6 @@ else:
         st.markdown("#### 📖 Lesson Explanation")
         st.markdown(clean_exp)
         st.markdown("</div>", unsafe_allow_html=True)
-
-        if flashcards:
-            st.write("---")
-            st.markdown("### 🎴 Study Flashcards")
-            st.caption("Review these before moving to the quiz.")
-
-            if st.session_state.theme == "light":
-                front_bg = "linear-gradient(135deg, #FFFBF7 0%, #FDF0E0 100%)"
-                front_color = "#2C1A0E"
-                front_border = "1px solid #D9B68C"
-                back_bg = "linear-gradient(135deg, #FF6F20 0%, #C65D3B 100%)"
-                back_color = "#FFFFFF"
-                back_border = "1px solid rgba(255, 111, 32, 0.2)"
-                title_color_front = "#A65E2E"
-                title_color_back = "#FFE0CC"
-                shadow = "rgba(198, 93, 59, 0.15)"
-            else:
-                front_bg = "linear-gradient(135deg, #2C1810 0%, #1A0F07 100%)"
-                front_color = "#F5E6D0"
-                front_border = "1px solid rgba(217, 182, 140, 0.15)"
-                back_bg = "linear-gradient(135deg, #FF6F20 0%, #A65E2E 100%)"
-                back_color = "#FFFFFF"
-                back_border = "1px solid rgba(255, 111, 32, 0.25)"
-                title_color_front = "#D9B68C"
-                title_color_back = "#FFE0CC"
-                shadow = "rgba(0, 0, 0, 0.45)"
-
-            cards_html = f"""
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-                .card-grid {{
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-                    gap: 12px;
-                    padding: 5px;
-                    font-family: 'Inter', sans-serif;
-                }}
-                .flip-card {{
-                    background-color: transparent;
-                    width: 100%;
-                    height: 140px;
-                    perspective: 1000px;
-                    cursor: pointer;
-                }}
-                .flip-card-inner {{
-                    position: relative;
-                    width: 100%;
-                    height: 100%;
-                    text-align: center;
-                    transition: transform 0.6s;
-                    transform-style: preserve-3d;
-                    box-shadow: 0 4px 12px {shadow};
-                    border-radius: 12px;
-                }}
-                .flip-card.flipped .flip-card-inner {{
-                    transform: rotateY(180deg);
-                }}
-                .flip-card-front, .flip-card-back {{
-                    position: absolute;
-                    width: 100%;
-                    height: 100%;
-                    -webkit-backface-visibility: hidden;
-                    backface-visibility: hidden;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 12px;
-                    border-radius: 12px;
-                    box-sizing: border-box;
-                }}
-                .flip-card-front {{
-                    background: {front_bg};
-                    color: {front_color};
-                    border: {front_border};
-                }}
-                .flip-card-back {{
-                    background: {back_bg};
-                    color: {back_color};
-                    border: {back_border};
-                }}
-                .title-label {{
-                    font-size: 0.7rem;
-                    text-transform: uppercase;
-                    letter-spacing: 0.08em;
-                    color: {title_color_front};
-                    margin-bottom: 6px;
-                    font-weight: 600;
-                }}
-                .card-text {{
-                    font-size: 0.85rem;
-                    font-weight: 500;
-                    line-height: 1.3;
-                }}
-                .flip-card-back .title-label {{
-                    color: {title_color_back};
-                }}
-            </style>
-            <div class="card-grid">
-            """
-            for idx, card in enumerate(flashcards):
-                front_esc = card['front'].replace("'", "&#39;").replace('"', "&quot;")
-                back_esc = card['back'].replace("'", "&#39;").replace('"', "&quot;")
-                cards_html += f"""
-                <div class="flip-card" onclick="this.classList.toggle('flipped')">
-                    <div class="flip-card-inner">
-                        <div class="flip-card-front">
-                            <div class="title-label">Card {idx+1} (Front)</div>
-                            <div class="card-text">{front_esc}</div>
-                        </div>
-                        <div class="flip-card-back">
-                            <div class="title-label">Answer (Back)</div>
-                            <div class="card-text">{back_esc}</div>
-                        </div>
-                    </div>
-                </div>
-                """
-            cards_html += "</div>"
-            import streamlit.components.v1 as components
-            components.html(cards_html, height=170)
 
         if st.button("➡️ Start Quiz for This Concept", type="primary"):
             st.session_state.concept_stage = "quiz"
