@@ -23,11 +23,9 @@ class TutorAgent:
             "3. Provide exactly one concrete worked-out example to reinforce the concept.\n"
             "4. Tailor your tone: use simple words and intuitive explanations for 'beginner'; "
             "use slightly more detailed, professional terminology and algebraic/formal examples for 'intermediate'.\n"
-            "5. At the very end of your response, add exactly 3 flashcards for study/review. Use this exact formatting for each card:\n"
-            "[FLASHCARD]\n"
-            "Front: [Key question or term]\n"
-            "Back: [Brief definition or answer]\n"
-            "[FLASHCARD]"
+            "5. Use standard Markdown for readability.\n"
+            "6. If you include equations, always wrap inline math in `$...$` and display equations in `$$...$$`.\n"
+            "7. Do not add flashcards, quiz questions, or answer keys in the lesson explanation."
         )
 
     def _format_fallback_notes(self, subconcept: str, curriculum_notes: str) -> str:
@@ -42,12 +40,6 @@ class TutorAgent:
                 parts.append(notes)
             if examples:
                 parts.append(f"**Example:** {examples}")
-            parts.append(
-                "[FLASHCARD]\n"
-                f"Front: What is {matched}?\n"
-                f"Back: {notes[:120].strip() if notes else 'A key concept in this lesson.'}\n"
-                "[FLASHCARD]"
-            )
             return "\n\n".join(parts)
         except Exception:
             return (

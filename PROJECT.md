@@ -157,8 +157,8 @@ app.py top-to-bottom:
 
 ### Sidebar Modules
 - `Aura Tracker`: shows completed topics out of total subconcepts plus a simple aura status
-- `Kairu Focus`: 30-minute and 5-minute focus sessions with a countdown display
-- Slide presentation download remains available
+- `Kairu Focus`: 30-minute and 5-minute focus sessions with a countdown display, pause/resume controls, and a docked right-side layout
+- Slide presentation download was removed from the sidebar
 - Mistake flashcard download now appears in the review step, not the sidebar
 
 ---
@@ -172,6 +172,8 @@ app.py top-to-bottom:
 - Add sidebar Aura Tracker and Kairu focus timer
 - Keep the layout calm, professional, and functional
 - Simplify the setup page into a more student-friendly onboarding screen
+- Keep the primary buttons high-contrast in both light and dark mode
+- Normalize lesson text so inline math renders as Markdown math instead of raw LaTeX
 
 ### 2. Quiz Agent — 2-3 Questions Per Topic
 - Files: `agents/quiz.py`, `agents/orchestrator.py`, `app.py` (lines 943–1010)

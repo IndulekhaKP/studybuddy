@@ -1,5 +1,6 @@
 import os
 import time
+import re
 import streamlit as st
 from dotenv import load_dotenv
 from core.llm_client import DEFAULT_MODEL, TASK_MODEL_DEFAULTS
@@ -16,16 +17,28 @@ if st.session_state.theme == "light":
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
+        :root {
+            --nova-bg: linear-gradient(135deg, #F8FAFC 0%, #EEF2F7 100%);
+            --nova-surface: #FFFFFF;
+            --nova-surface-alt: #F1F5F9;
+            --nova-border: #D8E1EC;
+            --nova-text: #0F172A;
+            --nova-muted: #475569;
+            --nova-button-bg: #0F172A;
+            --nova-button-text: #F8FAFC;
+            --nova-button-border: #0F172A;
+            --nova-accent: #64748B;
+        }
         
         .stApp {
-            background: linear-gradient(135deg, #F8FAFC 0%, #EEF2F7 100%);
+            background: var(--nova-bg);
             font-family: 'Inter', sans-serif;
-            color: #111827;
+            color: var(--nova-text);
         }
         
         /* Overrides for Light Mode */
         .stApp p, .stApp span, .stApp label, .stApp li {
-            color: #334155 !important;
+            color: var(--nova-muted) !important;
         }
         .stApp button, .stApp input, .stApp textarea, .stApp select {
             font-family: 'Inter', sans-serif !important;
@@ -44,6 +57,15 @@ if st.session_state.theme == "light":
         section[data-testid="stSidebar"] {
             background-color: #FFFFFF !important;
             border-right: 1px solid #E2E8F0 !important;
+            position: fixed !important;
+            right: 0 !important;
+            left: auto !important;
+            top: 0 !important;
+            height: 100vh !important;
+            z-index: 1000 !important;
+        }
+        div[data-testid="stAppViewContainer"] .main .block-container {
+            padding-right: 20rem !important;
         }
         section[data-testid="stSidebar"] .stMarkdown h1,
         section[data-testid="stSidebar"] .stMarkdown h2,
@@ -55,9 +77,11 @@ if st.session_state.theme == "light":
             color: #334155 !important;
         }
         section[data-testid="stSidebar"] .stButton>button,
-        section[data-testid="stSidebar"] .stDownloadButton>button {
-            color: #0F172A !important;
-            background: #E2E8F0 !important;
+        section[data-testid="stSidebar"] .stDownloadButton>button,
+        section[data-testid="stSidebar"] button[kind="primary"] {
+            color: #F8FAFC !important;
+            background: #1F2937 !important;
+            border: 1px solid #1F2937 !important;
         }
         
         .badge {
@@ -141,9 +165,9 @@ if st.session_state.theme == "light":
         }
         
         .stButton>button {
-            background: #334155 !important;
-            color: #F8FAFC !important;
-            border: none !important;
+            background: var(--nova-button-bg) !important;
+            color: var(--nova-button-text) !important;
+            border: 1px solid var(--nova-button-border) !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
             font-weight: 700 !important;
@@ -159,9 +183,9 @@ if st.session_state.theme == "light":
         }
         
         .stDownloadButton>button {
-            background: #64748B !important;
+            background: #334155 !important;
             color: #F8FAFC !important;
-            border: none !important;
+            border: 1px solid #334155 !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
             font-weight: 600 !important;
@@ -175,7 +199,7 @@ if st.session_state.theme == "light":
         }
         
         div[data-testid="stMarkdownContainer"] p {
-            color: #334155 !important;
+            color: var(--nova-muted) !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -183,16 +207,28 @@ else:
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
+        :root {
+            --nova-bg: linear-gradient(135deg, #0B1120 0%, #111827 100%);
+            --nova-surface: #0F172A;
+            --nova-surface-alt: #111827;
+            --nova-border: #243044;
+            --nova-text: #E5E7EB;
+            --nova-muted: #CBD5E1;
+            --nova-button-bg: #F8FAFC;
+            --nova-button-text: #0F172A;
+            --nova-button-border: #F8FAFC;
+            --nova-accent: #94A3B8;
+        }
         
         .stApp {
-            background: linear-gradient(135deg, #0B1120 0%, #111827 100%);
+            background: var(--nova-bg);
             font-family: 'Inter', sans-serif;
-            color: #E5E7EB;
+            color: var(--nova-text);
         }
         
         /* Overrides for Night Eye Mode */
         .stApp p, .stApp span, .stApp label, .stApp li {
-            color: #CBD5E1 !important;
+            color: var(--nova-muted) !important;
         }
         .stApp button, .stApp input, .stApp textarea, .stApp select {
             font-family: 'Inter', sans-serif !important;
@@ -211,6 +247,15 @@ else:
         section[data-testid="stSidebar"] {
             background-color: #0F172A !important;
             border-right: 1px solid #1F2937 !important;
+            position: fixed !important;
+            right: 0 !important;
+            left: auto !important;
+            top: 0 !important;
+            height: 100vh !important;
+            z-index: 1000 !important;
+        }
+        div[data-testid="stAppViewContainer"] .main .block-container {
+            padding-right: 20rem !important;
         }
         section[data-testid="stSidebar"] .stMarkdown h1,
         section[data-testid="stSidebar"] .stMarkdown h2,
@@ -222,9 +267,11 @@ else:
             color: #CBD5E1 !important;
         }
         section[data-testid="stSidebar"] .stButton>button,
-        section[data-testid="stSidebar"] .stDownloadButton>button {
-            color: #0F172A !important;
-            background: #E2E8F0 !important;
+        section[data-testid="stSidebar"] .stDownloadButton>button,
+        section[data-testid="stSidebar"] button[kind="primary"] {
+            color: #F8FAFC !important;
+            background: #334155 !important;
+            border: 1px solid #334155 !important;
         }
         
         .badge {
@@ -308,9 +355,9 @@ else:
         }
         
         .stButton>button {
-            background: #E2E8F0 !important;
-            color: #0F172A !important;
-            border: none !important;
+            background: var(--nova-button-bg) !important;
+            color: var(--nova-button-text) !important;
+            border: 1px solid var(--nova-button-border) !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
             font-weight: 700 !important;
@@ -326,9 +373,9 @@ else:
         }
         
         .stDownloadButton>button {
-            background: #CBD5E1 !important;
-            color: #F8FAFC !important;
-            border: none !important;
+            background: #E2E8F0 !important;
+            color: #0F172A !important;
+            border: 1px solid #E2E8F0 !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
             font-weight: 600 !important;
@@ -342,7 +389,7 @@ else:
         }
         
         div[data-testid="stMarkdownContainer"] p {
-            color: #CBD5E1 !important;
+            color: var(--nova-muted) !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -452,6 +499,8 @@ if "focus_duration_minutes" not in st.session_state:
     st.session_state.focus_duration_minutes = None
 if "focus_label" not in st.session_state:
     st.session_state.focus_label = None
+if "focus_paused_remaining" not in st.session_state:
+    st.session_state.focus_paused_remaining = None
 
 def reset_session():
     st.session_state.state = None
@@ -474,6 +523,7 @@ def reset_session():
     st.session_state.focus_ends_at = None
     st.session_state.focus_duration_minutes = None
     st.session_state.focus_label = None
+    st.session_state.focus_paused_remaining = None
 
 def reset_concept_flow(clear_explanation: bool = True):
     if clear_explanation:
@@ -492,6 +542,7 @@ def reset_concept_flow(clear_explanation: bool = True):
     st.session_state.focus_ends_at = None
     st.session_state.focus_duration_minutes = None
     st.session_state.focus_label = None
+    st.session_state.focus_paused_remaining = None
 
 def start_focus_session(minutes: int, label: str) -> None:
     now = time.time()
@@ -500,8 +551,41 @@ def start_focus_session(minutes: int, label: str) -> None:
     st.session_state.focus_ends_at = now + (minutes * 60)
     st.session_state.focus_duration_minutes = minutes
     st.session_state.focus_label = label
+    st.session_state.focus_paused_remaining = None
+
+def pause_focus_session() -> None:
+    if st.session_state.get("focus_mode") != "active":
+        return
+    remaining = remaining_focus_seconds()
+    st.session_state.focus_mode = "paused"
+    st.session_state.focus_paused_remaining = remaining
+    st.session_state.focus_ends_at = None
+
+def resume_focus_session() -> None:
+    if st.session_state.get("focus_mode") != "paused":
+        return
+    remaining = int(st.session_state.get("focus_paused_remaining") or 0)
+    if remaining <= 0:
+        st.session_state.focus_mode = None
+        st.session_state.focus_paused_remaining = None
+        return
+    now = time.time()
+    st.session_state.focus_mode = "active"
+    st.session_state.focus_started_at = now
+    st.session_state.focus_ends_at = now + remaining
+    st.session_state.focus_paused_remaining = None
+
+def reset_focus_session() -> None:
+    st.session_state.focus_mode = None
+    st.session_state.focus_started_at = None
+    st.session_state.focus_ends_at = None
+    st.session_state.focus_duration_minutes = None
+    st.session_state.focus_label = None
+    st.session_state.focus_paused_remaining = None
 
 def remaining_focus_seconds() -> int:
+    if st.session_state.get("focus_mode") == "paused":
+        return int(st.session_state.get("focus_paused_remaining") or 0)
     if not st.session_state.get("focus_ends_at"):
         return 0
     return max(0, int(st.session_state.focus_ends_at - time.time()))
@@ -520,19 +604,35 @@ def aura_status(completed: int, total: int) -> tuple[str, str]:
         return "Zenith", "Near mastery"
     return "Crown", "Topic complete"
 
-def build_focus_timer_html(remaining_seconds: int, total_seconds: int, label: str) -> str:
+def build_focus_timer_html(remaining_seconds: int, total_seconds: int, label: str, paused: bool = False) -> str:
     minutes = max(0, remaining_seconds // 60)
     seconds = max(0, remaining_seconds % 60)
     progress = 0 if total_seconds <= 0 else max(0, min(100, ((total_seconds - remaining_seconds) / total_seconds) * 100))
+    status = "Paused" if paused else "In focus"
+    ring = "#94A3B8" if paused else "#0F766E"
+    fill = "#E2E8F0" if paused else "#DBEAFE"
+    bg = "#FFFFFF" if st.session_state.theme == "light" else "#0F172A"
+    text = "#0F172A" if st.session_state.theme == "light" else "#F8FAFC"
+    muted = "#64748B" if st.session_state.theme == "light" else "#94A3B8"
     return f"""
-    <div style="font-family: Inter, sans-serif; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 8px 24px rgba(15,23,42,0.08);">
-        <div style="font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #64748b; margin-bottom: 6px;">Kairu</div>
-        <div style="font-size: 15px; color: #0f172a; font-weight: 600; margin-bottom: 10px;">{label}</div>
-        <div id="kairu-time" style="font-size: 40px; line-height: 1; color: #111827; font-weight: 700; letter-spacing: -0.04em;">{minutes:02d}:{seconds:02d}</div>
-        <div style="margin-top: 14px; height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
-            <div id="kairu-bar" style="height: 100%; width: {progress}%; background: #334155; border-radius: 999px;"></div>
+    <div style="font-family: Inter, sans-serif; background: {bg}; border: 1px solid {'#E2E8F0' if st.session_state.theme == 'light' else '#243044'}; border-radius: 22px; padding: 18px; box-shadow: 0 18px 36px rgba(15,23,42,0.10);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px;">
+            <div>
+                <div style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: {muted}; margin-bottom: 4px;">Kairu</div>
+                <div style="font-size: 15px; color: {text}; font-weight: 700;">{label}</div>
+            </div>
+            <div style="padding: 6px 10px; border-radius: 999px; background: {fill}; color: {ring}; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;">{status}</div>
         </div>
-        <div id="kairu-status" style="margin-top: 12px; font-size: 12px; color: #64748b;">Stay focused. One session at a time.</div>
+        <div style="display:flex; justify-content:center;">
+            <div style="width: 168px; height: 168px; border-radius: 50%; border: 10px solid {fill}; box-shadow: inset 0 0 0 6px {ring}; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                <div style="font-size: 13px; color: {muted}; margin-bottom: 4px;">Focus</div>
+                <div id="kairu-time" style="font-size: 42px; line-height: 1; color: {text}; font-weight: 800; letter-spacing: -0.06em;">{minutes:02d}:{seconds:02d}</div>
+            </div>
+        </div>
+        <div style="margin-top: 14px; height: 8px; background: {'#E2E8F0' if st.session_state.theme == 'light' else '#1F2937'}; border-radius: 999px; overflow: hidden;">
+            <div id="kairu-bar" style="height: 100%; width: {progress}%; background: {ring}; border-radius: 999px;"></div>
+        </div>
+        <div id="kairu-status" style="margin-top: 12px; font-size: 12px; color: {muted}; text-align:center;">{'Timer paused.' if paused else 'Stay focused. One session at a time.'}</div>
     </div>
     <script>
       let remaining = {remaining_seconds};
@@ -540,6 +640,7 @@ def build_focus_timer_html(remaining_seconds: int, total_seconds: int, label: st
       const barEl = document.getElementById('kairu-bar');
       const statusEl = document.getElementById('kairu-status');
       const total = {total_seconds};
+      const paused = {str(paused).lower()};
       function render() {{
         const mins = String(Math.floor(Math.max(0, remaining) / 60)).padStart(2, '0');
         const secs = String(Math.max(0, remaining) % 60).padStart(2, '0');
@@ -550,41 +651,32 @@ def build_focus_timer_html(remaining_seconds: int, total_seconds: int, label: st
           statusEl.textContent = 'Session complete. Take a short break.';
           clearInterval(timer);
         }}
-        remaining -= 1;
+        if (!paused) {{
+          remaining -= 1;
+        }}
       }}
       render();
       const timer = setInterval(render, 1000);
     </script>
     """
 
+def normalize_lesson_math(text: str) -> str:
+    if not text:
+        return text
+    text = text.replace("\\[", "$$").replace("\\]", "$$")
+    text = text.replace("\\(", "$").replace("\\)", "$")
+    text = re.sub(r"\\{2}([A-Za-z]+)", r"\\\1", text)
+    return text
+
 def parse_flashcards(text: str):
     """Extracts flashcards from tutor's output based on [FLASHCARD] tags."""
-    import re
     if not text:
         return "", []
         
     parts = re.split(r'\[FLASHCARD\]', text)
     clean_explanation = parts[0].strip()
-    
-    flashcards = []
-    for part in parts[1:]:
-        part_str = part.strip()
-        if not part_str:
-            continue
-        lines = part_str.split("\n")
-        front = ""
-        back = ""
-        for line in lines:
-            if line.strip().lower().startswith("front:"):
-                front = line.strip()[6:].strip()
-            elif line.strip().lower().startswith("back:"):
-                back = line.strip()[5:].strip()
-        if front and back:
-            flashcards.append({"front": front, "back": back})
-            
-    # Clean up any leftover tags or formatting
     clean_explanation = clean_explanation.replace("[FLASHCARD]", "").strip()
-    return clean_explanation, flashcards
+    return normalize_lesson_math(clean_explanation), []
 
 # Sidebar Design
 st.sidebar.markdown(
@@ -648,35 +740,38 @@ if st.session_state.state:
             start_focus_session(5, "Quick 5")
             st.rerun()
 
-    if st.session_state.get("focus_ends_at"):
+    focus_active_or_paused = st.session_state.get("focus_mode") in {"active", "paused"}
+    if focus_active_or_paused:
         remaining = remaining_focus_seconds()
         total_seconds = int((st.session_state.focus_duration_minutes or 0) * 60)
         focus_label = st.session_state.focus_label or "Focus Session"
+        is_paused = st.session_state.get("focus_mode") == "paused"
         if remaining <= 0:
             st.success("Kairu session complete. Take a short break.")
         else:
             import streamlit.components.v1 as components
             components.html(
-                build_focus_timer_html(remaining, total_seconds, focus_label),
-                height=190,
+                build_focus_timer_html(remaining, total_seconds, focus_label, paused=is_paused),
+                height=280,
             )
         stop_col_a, stop_col_b = st.sidebar.columns(2)
         with stop_col_a:
-            if st.button("Reset", key="focus_reset"):
-                st.session_state.focus_mode = None
-                st.session_state.focus_started_at = None
-                st.session_state.focus_ends_at = None
-                st.session_state.focus_duration_minutes = None
-                st.session_state.focus_label = None
-                st.rerun()
+            if is_paused:
+                if st.button("Resume", key="focus_resume"):
+                    resume_focus_session()
+                    st.rerun()
+            else:
+                if st.button("Pause", key="focus_pause"):
+                    pause_focus_session()
+                    st.rerun()
         with stop_col_b:
-            if st.button("Sync", key="focus_sync"):
+            if st.button("Reset", key="focus_reset"):
+                reset_focus_session()
                 st.rerun()
     else:
         st.sidebar.caption("Start a 30 minute deep-work block or a 5 minute sprint.")
     st.sidebar.write("---")
     
-    # Add Slides presentation generator download
     st.sidebar.caption(f"Session: `{state['session_id']}`")
     if st.sidebar.button("🔄 Study New Topic"):
         reset_session()
@@ -799,12 +894,7 @@ else:
     total_count = len(subconcepts)
     progress_percentage = min(completed_count / total_count, 1.0) if total_count > 0 else 0.0
     
-    # Course Progress dashboard
-    col_prog_bar, col_prog_txt = st.columns([0.85, 0.15])
-    with col_prog_bar:
-        st.progress(progress_percentage)
-    with col_prog_txt:
-        st.markdown(f"**{int(progress_percentage * 100)}%** ({completed_count}/{total_count})")
+    st.caption(f"Course progress: {completed_count}/{total_count} concepts complete ({int(progress_percentage * 100)}%).")
     st.write("---")
     
     # Check if curriculum is fully completed
