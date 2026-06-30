@@ -409,6 +409,10 @@ if "flashcards_html" not in st.session_state:
     st.session_state.flashcards_html = None
 if "smart_flashcards" not in st.session_state:
     st.session_state.smart_flashcards = []
+if "concept_stage" not in st.session_state:
+    st.session_state.concept_stage = "lesson"
+if "review_concept" not in st.session_state:
+    st.session_state.review_concept = None
 
 def reset_session():
     st.session_state.state = None
@@ -424,6 +428,21 @@ def reset_session():
     st.session_state.quiz_round_results = []
     st.session_state.flashcards_html = None
     st.session_state.smart_flashcards = []
+    st.session_state.concept_stage = "lesson"
+    st.session_state.review_concept = None
+
+def reset_concept_flow(clear_explanation: bool = True):
+    if clear_explanation:
+        st.session_state.explanation = None
+    st.session_state.question = None
+    st.session_state.graded = None
+    st.session_state.quiz_round = None
+    st.session_state.quiz_round_idx = 0
+    st.session_state.quiz_round_results = []
+    st.session_state.flashcards_html = None
+    st.session_state.smart_flashcards = []
+    st.session_state.concept_stage = "lesson"
+    st.session_state.review_concept = None
 
 def parse_flashcards(text: str):
     """Extracts flashcards from tutor's output based on [FLASHCARD] tags."""
@@ -510,53 +529,6 @@ if st.session_state.state:
         )
         st.sidebar.write("---")
             
-    # Smart Mistake Flashcards
-    st.sidebar.markdown("### \U0001f9e0 Smart Flashcards")
-    if not st.session_state.get("flashcards_html"):
-        if st.sidebar.button("\u26a1 Generate Mistake Flashcards"):
-            with st.spinner("FlashcardAgent analyzing weak topics..."):
-                smart_cards = orchestrator.generate_mistake_flashcards(state)
-                if smart_cards:
-                    fc_html = orchestrator.flashcard_agent.build_html_flashcard_deck(
-                        smart_cards, title="Smart Revision Flashcards"
-                    )
-                    st.session_state.flashcards_html = fc_html
-                    st.session_state.smart_flashcards = smart_cards
-                    st.rerun()
-                else:
-                    st.sidebar.info("No weak topics detected yet - keep studying!")
-    else:
-        card_count = len(st.session_state.get("smart_flashcards", []))
-        st.sidebar.caption(f"\u2705 {card_count} targeted flashcards ready")
-        st.sidebar.download_button(
-            label="\U0001f4e5 Download Flashcard Deck (HTML)",
-            data=st.session_state.flashcards_html,
-            file_name="studybuddy_smart_flashcards.html",
-            mime="text/html"
-        )
-        if st.sidebar.button("\U0001f504 Regenerate Flashcards"):
-            st.session_state.flashcards_html = None
-            st.session_state.smart_flashcards = []
-            st.rerun()
-    st.sidebar.write("---")
-
-    # Add Download Study Notes button
-    notes_markdown = f"# StudyBuddy Study Notes: {state['topic']}\n\n"
-    if state.get("history"):
-        for log in state["history"]:
-            notes_markdown += f"## Concept: {log['subconcept']}\n"
-            notes_markdown += f"- **Difficulty Level**: {log['level'].upper()}\n"
-            notes_markdown += f"- **Result Check**: {'PASSED' if log['correct'] else 'FAILED'}\n"
-            notes_markdown += f"- **Grader Feedback**: {log['reasoning']}\n\n"
-            
-    st.sidebar.download_button(
-        label="📝 Download Study Notes (MD)",
-        data=notes_markdown,
-        file_name=f"{state['topic'].replace(' ', '_')}_study_notes.md",
-        mime="text/markdown"
-    )
-    st.sidebar.write("---")
-
     st.sidebar.caption(f"Session: `{state['session_id']}`")
     if st.sidebar.button("🔄 Study New Topic"):
         reset_session()
@@ -882,36 +854,32 @@ else:
             
         st.stop()
         
-    current_concept = subconcepts[current_idx]
+    current_concept = st.session_state.review_concept if st.session_state.get("concept_stage") == "review" and st.session_state.review_concept else subconcepts[current_idx]
     
     st.write(f"### Current Concept: **{current_concept}**")
     
-    # Create side-by-side layout for lesson (Tutor) and quiz (Quiz)
-    col_lesson, col_quiz = st.columns([1.1, 0.9], gap="large")
-    
-    with col_lesson:
+    # Tutor Agent generates lesson once per concept
+    if not st.session_state.explanation:
+        with st.spinner("Tutor agent preparing explanation..."):
+            explanation = orchestrator.get_explanation(state)
+            st.session_state.explanation = explanation
+    else:
+        explanation = st.session_state.explanation
+
+    clean_exp, flashcards = parse_flashcards(explanation)
+    current_stage = st.session_state.get("concept_stage", "lesson")
+
+    if current_stage == "lesson":
         st.markdown("<div class='lesson-card'>", unsafe_allow_html=True)
         st.markdown("#### 📖 Lesson Explanation")
-        
-        # Tutor Agent generates lesson
-        if not st.session_state.explanation:
-            with st.spinner("Tutor agent preparing explanation..."):
-                explanation = orchestrator.get_explanation(state)
-                st.session_state.explanation = explanation
-        else:
-            explanation = st.session_state.explanation
-            
-        clean_exp, flashcards = parse_flashcards(explanation)
         st.markdown(clean_exp)
         st.markdown("</div>", unsafe_allow_html=True)
-        
-        # Display Flashcards if available
+
         if flashcards:
             st.write("---")
             st.markdown("### 🎴 Study Flashcards")
-            st.caption("Click a card to flip it and reveal the answer!")
-            
-            # Dynamic card colors based on selected theme
+            st.caption("Review these before moving to the quiz.")
+
             if st.session_state.theme == "light":
                 front_bg = "linear-gradient(135deg, #FFFBF7 0%, #FDF0E0 100%)"
                 front_color = "#2C1A0E"
@@ -1026,29 +994,32 @@ else:
             cards_html += "</div>"
             import streamlit.components.v1 as components
             components.html(cards_html, height=170)
-        
-    with col_quiz:
+
+        if st.button("➡️ Start Quiz for This Concept", type="primary"):
+            st.session_state.concept_stage = "quiz"
+            st.rerun()
+
+    elif current_stage == "quiz":
         st.markdown("<div class='quiz-card'>", unsafe_allow_html=True)
-        st.markdown("#### 📝 Concept Check (2–3 Questions)")
-        
-        # Load or generate the quiz round (batch of 3 questions)
+        st.markdown("#### 📝 Concept Check (3 Questions)")
+
         if not st.session_state.quiz_round:
             with st.spinner("Quiz agent preparing 3 questions for this concept..."):
                 quiz_round = orchestrator.get_quiz_questions_batch(state, explanation, n=3)
                 st.session_state.quiz_round = quiz_round
                 st.session_state.quiz_round_idx = 0
                 st.session_state.quiz_round_results = []
-        
+
         quiz_round = st.session_state.quiz_round
         q_idx = st.session_state.quiz_round_idx
         total_qs = len(quiz_round)
-        
+
         if q_idx < total_qs and not st.session_state.graded:
             question_data = quiz_round[q_idx]
             st.markdown(f"**Question {q_idx + 1} of {total_qs}:**")
             options = question_data.get("options", [])
             selected_option = st.radio(
-                label=question_data.get('question', ''),
+                label=question_data.get("question", ""),
                 options=options,
                 index=None,
                 key=f"mcq_round_radio_{q_idx}"
@@ -1067,22 +1038,23 @@ else:
                     })
                     next_q_idx = q_idx + 1
                     st.session_state.quiz_round_idx = next_q_idx
-                    
+
                     if next_q_idx >= total_qs:
                         round_results = st.session_state.quiz_round_results
                         correct_count = sum(1 for r in round_results if r["correct"])
-                        passed = correct_count >= 2  # >=2/3 to pass
-                        
+                        passed = correct_count >= 2
+
                         combined_feedback = f"**Round Complete:** {correct_count}/{total_qs} correct.\n\n"
                         for i, r in enumerate(round_results):
                             status = "✅" if r["correct"] else "❌"
                             combined_feedback += f"{status} **Q{i+1}:** {r['feedback']}\n\n"
-                        
+
                         evaluation = orchestrator.evaluator.evaluate(
                             state["level"], passed, combined_feedback
                         )
-                        
+
                         current_subconcept = state["subconcepts"][state["current_index"]]
+                        st.session_state.review_concept = current_subconcept
                         if current_subconcept not in state["scores"]:
                             state["scores"][current_subconcept] = []
                         state["scores"][current_subconcept].append(passed)
@@ -1095,13 +1067,31 @@ else:
                             "reasoning": evaluation.get("reasoning", ""),
                             "score": f"{correct_count}/{total_qs}"
                         })
-                        
+
+                        if correct_count < total_qs:
+                            smart_cards = orchestrator.flashcard_agent.generate_mistake_flashcards(
+                                [current_subconcept],
+                                state["level"]
+                            )
+                            if smart_cards:
+                                st.session_state.smart_flashcards = smart_cards
+                                st.session_state.flashcards_html = orchestrator.flashcard_agent.build_html_flashcard_deck(
+                                    smart_cards,
+                                    title="Smart Revision Flashcards"
+                                )
+                            else:
+                                st.session_state.smart_flashcards = []
+                                st.session_state.flashcards_html = None
+                        else:
+                            st.session_state.smart_flashcards = []
+                            st.session_state.flashcards_html = None
+
                         if evaluation["action"] == "advance":
                             if current_subconcept not in state["completed"]:
                                 state["completed"].append(current_subconcept)
                             state["current_index"] += 1
                         state["level"] = evaluation["next_level"]
-                        
+
                         orchestrator.save_session(state)
                         st.session_state.graded = {
                             "correct": passed,
@@ -1110,48 +1100,57 @@ else:
                             "next_state": state
                         }
                         st.session_state.state = state
+                        st.session_state.concept_stage = "review"
                     st.rerun()
-        
-        elif st.session_state.graded:
-            result = st.session_state.graded
-            correct = result["correct"]
-            feedback = result["feedback"]
-            evaluation = result["evaluation"]
-            round_results = st.session_state.get("quiz_round_results", [])
-            correct_count = sum(1 for r in round_results if r["correct"])
-            total_qs_done = len(round_results)
-            
-            if correct:
-                st.success(f"🎉 **Passed!** {correct_count}/{total_qs_done} correct — great work!")
-            else:
-                st.error(f"❌ **Not yet.** {correct_count}/{total_qs_done} correct — need ≥2 to advance.")
-            
-            with st.expander("📋 See detailed feedback"):
-                st.markdown(feedback)
-            
-            st.markdown("<div class='evaluator-card'>", unsafe_allow_html=True)
-            st.markdown(f"🔄 **Evaluator Decision:** Action: `{evaluation['action'].upper()}` | Next Level: `{evaluation['next_level'].upper()}`")
-            st.caption(f"*Rationale: {evaluation['reasoning']}*")
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            if correct:
-                if st.button("➡️ Advance to Next Concept"):
-                    st.session_state.explanation = None
-                    st.session_state.question = None
-                    st.session_state.graded = None
-                    st.session_state.quiz_round = None
-                    st.session_state.quiz_round_idx = 0
-                    st.session_state.quiz_round_results = []
-                    st.rerun()
-            else:
-                btn_label = "🔄 Re-try Concept (Simpler Analogy)" if evaluation["action"] == "repeat_simpler" else "🔄 Re-try Concept (Practice)"
-                if st.button(btn_label):
-                    st.session_state.explanation = None
-                    st.session_state.question = None
-                    st.session_state.graded = None
-                    st.session_state.quiz_round = None
-                    st.session_state.quiz_round_idx = 0
-                    st.session_state.quiz_round_results = []
-                    st.rerun()
-                    
+
         st.markdown("</div>", unsafe_allow_html=True)
+
+    elif current_stage == "review" and st.session_state.graded:
+        result = st.session_state.graded
+        correct = result["correct"]
+        feedback = result["feedback"]
+        evaluation = result["evaluation"]
+        round_results = st.session_state.get("quiz_round_results", [])
+        correct_count = sum(1 for r in round_results if r["correct"])
+        total_qs_done = len(round_results)
+
+        st.markdown("<div class='quiz-card'>", unsafe_allow_html=True)
+        st.markdown("#### ✅ Quiz Review")
+
+        if correct:
+            st.success(f"🎉 **Passed!** {correct_count}/{total_qs_done} correct — great work!")
+        else:
+            st.error(f"❌ **Not yet.** {correct_count}/{total_qs_done} correct — need ≥2 to advance.")
+
+        with st.expander("📋 See detailed feedback", expanded=True):
+            st.markdown(feedback)
+
+        st.markdown("<div class='evaluator-card'>", unsafe_allow_html=True)
+        st.markdown(f"🔄 **Evaluator Decision:** Action: `{evaluation['action'].upper()}` | Next Level: `{evaluation['next_level'].upper()}`")
+        st.caption(f"*Rationale: {evaluation['reasoning']}*")
+        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        if st.session_state.smart_flashcards:
+            card_count = len(st.session_state.smart_flashcards)
+            st.write("---")
+            st.markdown("### 🧠 Mistake Flashcards")
+            st.caption(f"{card_count} targeted revision flashcards were generated from the questions you missed.")
+            st.download_button(
+                label="📥 Download Mistake Flashcards (HTML)",
+                data=st.session_state.flashcards_html,
+                file_name="studybuddy_mistake_flashcards.html",
+                mime="text/html"
+            )
+        elif correct_count == total_qs_done:
+            st.info("No mistake flashcards needed for this concept — you answered all 3 correctly.")
+
+        if correct:
+            if st.button("➡️ Continue to Next Concept", type="primary"):
+                reset_concept_flow(clear_explanation=True)
+                st.rerun()
+        else:
+            btn_label = "🔄 Re-try Concept (Simpler Analogy)" if evaluation["action"] == "repeat_simpler" else "🔄 Re-try Concept (Practice)"
+            if st.button(btn_label, type="primary"):
+                reset_concept_flow(clear_explanation=True)
+                st.rerun()
