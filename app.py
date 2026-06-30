@@ -1,6 +1,7 @@
 import os
 import time
 import re
+import base64
 from urllib.parse import quote_plus
 import streamlit as st
 from dotenv import load_dotenv
@@ -613,74 +614,46 @@ def build_focus_timer_html(remaining_seconds: int, total_seconds: int, label: st
     </script>
     """
 
-def build_rain_player_html() -> str:
+def build_music_player_html(audio_b64: str) -> str:
     return """
     <div style="font-family: Inter, sans-serif; background: #FFFFFF; border: 1px solid #DBEAFE; border-radius: 18px; padding: 16px; box-shadow: 0 12px 28px rgba(59,130,246,0.10);">
-        <div style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #64748B; margin-bottom: 6px;">Cozy Rain</div>
-        <div style="font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 10px;">Study ambience</div>
-        <div style="font-size: 12px; color: #64748B; margin-bottom: 12px;">Press play for a soft rain loop while you read.</div>
+        <div style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #64748B; margin-bottom: 6px;">Cozy Study Music</div>
+        <div style="font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 10px;">Tokyo Funk Loop</div>
+        <div style="font-size: 12px; color: #64748B; margin-bottom: 12px;">Press play for a looping study track while you read.</div>
         <div style="display:flex; gap:10px; align-items:center; margin-bottom: 12px;">
-            <button id="rain-play" style="background:#DBEAFE;color:#111827;border:1px solid #BFDBFE;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;">Play</button>
-            <button id="rain-stop" style="background:#F8FAFC;color:#111827;border:1px solid #BFDBFE;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;">Pause</button>
+            <button id="music-play" style="background:#DBEAFE;color:#111827;border:1px solid #BFDBFE;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;">Play</button>
+            <button id="music-stop" style="background:#F8FAFC;color:#111827;border:1px solid #BFDBFE;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;">Pause</button>
         </div>
         <div style="height:8px;background:#E2E8F0;border-radius:999px;overflow:hidden;">
-            <div id="rain-bar" style="width:0%;height:100%;background:#60A5FA;border-radius:999px;"></div>
+            <div id="music-bar" style="width:0%;height:100%;background:#60A5FA;border-radius:999px;"></div>
         </div>
+        <audio id="study-audio" loop preload="auto">
+            <source src="data:audio/mpeg;base64,{{AUDIO_B64}}" type="audio/mpeg">
+        </audio>
     </div>
     <script>
-      const playBtn = document.getElementById('rain-play');
-      const stopBtn = document.getElementById('rain-stop');
-      const bar = document.getElementById('rain-bar');
-      let audioCtx = null;
-      let noiseSource = null;
-      let gainNode = null;
-      let animation = null;
+      const playBtn = document.getElementById('music-play');
+      const stopBtn = document.getElementById('music-stop');
+      const bar = document.getElementById('music-bar');
+      const audio = document.getElementById('study-audio');
       let playing = false;
 
-      function buildNoiseBuffer(ctx, seconds = 4) {
-        const buffer = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < data.length; i++) {
-          data[i] = (Math.random() * 2 - 1) * 0.85;
-        }
-        return buffer;
-      }
-
-      function startRain() {
+      async function startMusic() {
         if (playing) return;
-        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioCtx.createBufferSource();
-        const highpass = audioCtx.createBiquadFilter();
-        const lowpass = audioCtx.createBiquadFilter();
-        gainNode = audioCtx.createGain();
-
-        source.buffer = buildNoiseBuffer(audioCtx, 4);
-        source.loop = true;
-        highpass.type = 'highpass';
-        highpass.frequency.value = 450;
-        lowpass.type = 'lowpass';
-        lowpass.frequency.value = 1800;
-        gainNode.gain.value = 0.045;
-
-        source.connect(highpass);
-        highpass.connect(lowpass);
-        lowpass.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        source.start();
-        noiseSource = source;
+        try {
+          await audio.play();
+        } catch (e) {
+          return;
+        }
         playing = true;
         playBtn.textContent = 'Playing';
         bar.style.width = '100%';
         bar.style.opacity = '0.8';
-        if (animation) cancelAnimationFrame(animation);
       }
 
-      function stopRain() {
-        if (noiseSource) {
-          try { noiseSource.stop(); } catch (e) {}
-          try { noiseSource.disconnect(); } catch (e) {}
-          noiseSource = null;
-        }
+      function stopMusic() {
+        audio.pause();
+        audio.currentTime = 0;
         playing = false;
         playBtn.textContent = 'Play';
         bar.style.width = '0%';
@@ -689,15 +662,21 @@ def build_rain_player_html() -> str:
 
       playBtn.addEventListener('click', async () => {
         if (!playing) {
-          startRain();
+          await startMusic();
         }
       });
 
       stopBtn.addEventListener('click', () => {
-        stopRain();
+        stopMusic();
       });
     </script>
-    """
+    """.replace("{{AUDIO_B64}}", audio_b64)
+
+def load_music_base64(path: str) -> str | None:
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
 
 def normalize_lesson_math(text: str) -> str:
     if not text:
@@ -746,6 +725,15 @@ if st.sidebar.button(theme_btn_label, key="theme_toggle_btn"):
     st.session_state.theme = "dark" if st.session_state.theme == "light" else "light"
     st.rerun()
 st.sidebar.write("---")
+
+music_b64 = load_music_base64("liecio-calming-rain-257596.mp3")
+if music_b64:
+    st.sidebar.markdown("### Cozy Study Music")
+    import streamlit.components.v1 as components
+    components.html(build_music_player_html(music_b64), height=240)
+    st.sidebar.write("---")
+else:
+    st.sidebar.caption("Music file not found: `liecio-calming-rain-257596.mp3`")
 
 st.sidebar.markdown("### Kairu Focus")
 focus_col_a, focus_col_b = st.sidebar.columns(2)
