@@ -1,6 +1,7 @@
 import os
 import time
 import re
+from urllib.parse import quote_plus
 import streamlit as st
 from dotenv import load_dotenv
 from core.llm_client import DEFAULT_MODEL, TASK_MODEL_DEFAULTS
@@ -24,9 +25,9 @@ if st.session_state.theme == "light":
             --nova-border: #D8E1EC;
             --nova-text: #0F172A;
             --nova-muted: #475569;
-            --nova-button-bg: #0F172A;
-            --nova-button-text: #F8FAFC;
-            --nova-button-border: #0F172A;
+            --nova-button-bg: #DBEAFE;
+            --nova-button-text: #111827;
+            --nova-button-border: #BFDBFE;
             --nova-accent: #64748B;
         }
         
@@ -57,15 +58,10 @@ if st.session_state.theme == "light":
         section[data-testid="stSidebar"] {
             background-color: #FFFFFF !important;
             border-right: 1px solid #E2E8F0 !important;
-            position: fixed !important;
-            right: 0 !important;
-            left: auto !important;
-            top: 0 !important;
-            height: 100vh !important;
-            z-index: 1000 !important;
         }
         div[data-testid="stAppViewContainer"] .main .block-container {
-            padding-right: 20rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
         }
         section[data-testid="stSidebar"] .stMarkdown h1,
         section[data-testid="stSidebar"] .stMarkdown h2,
@@ -76,14 +72,6 @@ if st.session_state.theme == "light":
         section[data-testid="stSidebar"] .stMarkdown p {
             color: #334155 !important;
         }
-        section[data-testid="stSidebar"] .stButton>button,
-        section[data-testid="stSidebar"] .stDownloadButton>button,
-        section[data-testid="stSidebar"] button[kind="primary"] {
-            color: #F8FAFC !important;
-            background: #1F2937 !important;
-            border: 1px solid #1F2937 !important;
-        }
-        
         .badge {
             padding: 5px 12px;
             border-radius: 9999px;
@@ -164,9 +152,12 @@ if st.session_state.theme == "light":
             box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
         }
         
-        .stButton>button {
+        .stButton>button,
+        .stDownloadButton>button,
+        button[kind="primary"] {
             background: var(--nova-button-bg) !important;
             color: var(--nova-button-text) !important;
+            -webkit-text-fill-color: var(--nova-button-text) !important;
             border: 1px solid var(--nova-button-border) !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
@@ -175,27 +166,13 @@ if st.session_state.theme == "light":
             text-transform: uppercase !important;
             letter-spacing: 0.06em !important;
             transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16) !important;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.14) !important;
         }
-        .stButton>button:hover {
+        .stButton>button:hover,
+        .stDownloadButton>button:hover,
+        button[kind="primary"]:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.24) !important;
-        }
-        
-        .stDownloadButton>button {
-            background: #334155 !important;
-            color: #F8FAFC !important;
-            border: 1px solid #334155 !important;
-            border-radius: 9999px !important;
-            padding: 10px 24px !important;
-            font-weight: 600 !important;
-            font-family: 'Inter', sans-serif !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(100, 116, 139, 0.24) !important;
-        }
-        .stDownloadButton>button:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(100, 116, 139, 0.34) !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.22) !important;
         }
         
         div[data-testid="stMarkdownContainer"] p {
@@ -214,9 +191,9 @@ else:
             --nova-border: #243044;
             --nova-text: #E5E7EB;
             --nova-muted: #CBD5E1;
-            --nova-button-bg: #F8FAFC;
-            --nova-button-text: #0F172A;
-            --nova-button-border: #F8FAFC;
+            --nova-button-bg: #DBEAFE;
+            --nova-button-text: #111827;
+            --nova-button-border: #BFDBFE;
             --nova-accent: #94A3B8;
         }
         
@@ -247,15 +224,10 @@ else:
         section[data-testid="stSidebar"] {
             background-color: #0F172A !important;
             border-right: 1px solid #1F2937 !important;
-            position: fixed !important;
-            right: 0 !important;
-            left: auto !important;
-            top: 0 !important;
-            height: 100vh !important;
-            z-index: 1000 !important;
         }
         div[data-testid="stAppViewContainer"] .main .block-container {
-            padding-right: 20rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
         }
         section[data-testid="stSidebar"] .stMarkdown h1,
         section[data-testid="stSidebar"] .stMarkdown h2,
@@ -266,14 +238,6 @@ else:
         section[data-testid="stSidebar"] .stMarkdown p {
             color: #CBD5E1 !important;
         }
-        section[data-testid="stSidebar"] .stButton>button,
-        section[data-testid="stSidebar"] .stDownloadButton>button,
-        section[data-testid="stSidebar"] button[kind="primary"] {
-            color: #F8FAFC !important;
-            background: #334155 !important;
-            border: 1px solid #334155 !important;
-        }
-        
         .badge {
             padding: 5px 12px;
             border-radius: 9999px;
@@ -354,9 +318,12 @@ else:
             box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
         }
         
-        .stButton>button {
+        .stButton>button,
+        .stDownloadButton>button,
+        button[kind="primary"] {
             background: var(--nova-button-bg) !important;
             color: var(--nova-button-text) !important;
+            -webkit-text-fill-color: var(--nova-button-text) !important;
             border: 1px solid var(--nova-button-border) !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
@@ -365,27 +332,13 @@ else:
             text-transform: uppercase !important;
             letter-spacing: 0.06em !important;
             transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(255,111,32,0.35) !important;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.14) !important;
         }
-        .stButton>button:hover {
+        .stButton>button:hover,
+        .stDownloadButton>button:hover,
+        button[kind="primary"]:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(255,111,32,0.5) !important;
-        }
-        
-        .stDownloadButton>button {
-            background: #E2E8F0 !important;
-            color: #0F172A !important;
-            border: 1px solid #E2E8F0 !important;
-            border-radius: 9999px !important;
-            padding: 10px 24px !important;
-            font-weight: 600 !important;
-            font-family: 'Inter', sans-serif !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(242,201,76,0.35) !important;
-        }
-        .stDownloadButton>button:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(242,201,76,0.5) !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.22) !important;
         }
         
         div[data-testid="stMarkdownContainer"] p {
@@ -667,6 +620,21 @@ def normalize_lesson_math(text: str) -> str:
     text = text.replace("\\(", "$").replace("\\)", "$")
     text = re.sub(r"\\{2}([A-Za-z]+)", r"\\\1", text)
     return text
+
+def build_resource_recommendations(topic: str, subconcept: str) -> dict:
+    query = quote_plus(f"{topic} {subconcept}".strip())
+    video_query = quote_plus(f"{topic} {subconcept} explained")
+    return {
+        "reading": [
+            {"label": "Wikipedia", "url": f"https://en.wikipedia.org/wiki/Special:Search?search={query}"},
+            {"label": "Britannica", "url": f"https://www.britannica.com/search?query={query}"},
+            {"label": "Khan Academy", "url": f"https://www.khanacademy.org/search?page_search_query={query}"},
+        ],
+        "videos": [
+            {"label": "YouTube search", "url": f"https://www.youtube.com/results?search_query={video_query}"},
+            {"label": "YouTube deep dive", "url": f"https://www.youtube.com/results?search_query={quote_plus(topic + ' ' + subconcept + ' lesson')}"},
+        ],
+    }
 
 def parse_flashcards(text: str):
     """Extracts flashcards from tutor's output based on [FLASHCARD] tags."""
@@ -1130,6 +1098,17 @@ else:
         st.markdown("<div class='lesson-card'>", unsafe_allow_html=True)
         st.markdown("#### 📖 Lesson Explanation")
         st.markdown(clean_exp)
+        resources = build_resource_recommendations(state["topic"], current_concept)
+        st.markdown("#### 🔎 Recommended Reading & Videos")
+        res_col_1, res_col_2 = st.columns(2)
+        with res_col_1:
+            st.markdown("**Read more**")
+            for item in resources["reading"]:
+                st.markdown(f"- [{item['label']}]({item['url']})")
+        with res_col_2:
+            st.markdown("**Watch next**")
+            for item in resources["videos"]:
+                st.markdown(f"- [{item['label']}]({item['url']})")
         st.markdown("</div>", unsafe_allow_html=True)
 
         if st.button("➡️ Start Quiz for This Concept", type="primary"):
