@@ -779,9 +779,9 @@ else:
 
 st.sidebar.write("---")
 
-st.sidebar.markdown("### Cozy Rain")
+st.sidebar.markdown("### Cozy Study Music")
 import streamlit.components.v1 as components
-components.html(build_rain_player_html(), height=190)
+components.html(build_music_player_html(music_b64) if music_b64 else "<div></div>", height=240)
 st.sidebar.write("---")
 
 if st.session_state.state:
