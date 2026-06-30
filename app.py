@@ -1,4 +1,5 @@
 import os
+import time
 import streamlit as st
 from dotenv import load_dotenv
 from core.llm_client import DEFAULT_MODEL, TASK_MODEL_DEFAULTS
@@ -17,20 +18,20 @@ if st.session_state.theme == "light":
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         
         .stApp {
-            background: linear-gradient(135deg, #FDF6EE 0%, #F5E6D0 100%);
+            background: linear-gradient(135deg, #F8FAFC 0%, #EEF2F7 100%);
             font-family: 'Inter', sans-serif;
-            color: #2C1A0E;
+            color: #111827;
         }
         
         /* Overrides for Light Mode */
         .stApp p, .stApp span, .stApp label, .stApp li {
-            color: #4A2E18 !important;
+            color: #334155 !important;
         }
         
         .main-title {
             font-size: 3.2rem;
             font-weight: 800;
-            background: linear-gradient(90deg, #FF6F20 0%, #F2C94C 100%);
+            background: linear-gradient(90deg, #0F172A 0%, #475569 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -38,11 +39,11 @@ if st.session_state.theme == "light":
         }
         
         section[data-testid="stSidebar"] {
-            background-color: #FDF0E0 !important;
-            border-right: 1px solid #D9B68C !important;
+            background-color: #FFFFFF !important;
+            border-right: 1px solid #E2E8F0 !important;
         }
         section[data-testid="stSidebar"] .stMarkdown p {
-            color: #A65E2E !important;
+            color: #334155 !important;
         }
         
         .badge {
@@ -55,28 +56,28 @@ if st.session_state.theme == "light":
             display: inline-block;
         }
         .badge-beginner {
-            background-color: #FFF3E0 !important;
-            color: #A65E2E !important;
-            border: 1px solid #FF6F20 !important;
+            background-color: #F8FAFC !important;
+            color: #334155 !important;
+            border: 1px solid #CBD5E1 !important;
         }
         .badge-intermediate {
-            background-color: #FFF8E1 !important;
-            color: #8B5000 !important;
-            border: 1px solid #F2C94C !important;
+            background-color: #EEF2F7 !important;
+            color: #334155 !important;
+            border: 1px solid #CBD5E1 !important;
         }
         
         .lesson-card {
             background: #FFFFFF;
-            border: 1px solid #D9B68C;
-            border-left: 5px solid #FF6F20;
+            border: 1px solid #E2E8F0;
+            border-left: 5px solid #475569;
             border-radius: 16px;
             padding: 26px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 20px -2px rgba(198, 93, 59, 0.1);
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
         }
         .lesson-card h4, .lesson-card h1, .lesson-card h2, .lesson-card h3 {
             font-family: 'Playfair Display', serif;
-            color: #2C1A0E !important;
+            color: #111827 !important;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
@@ -84,49 +85,49 @@ if st.session_state.theme == "light":
             font-family: 'Playfair Display', Georgia, serif;
             font-size: 1.05rem;
             line-height: 1.65;
-            color: #2C1A0E !important;
+            color: #334155 !important;
         }
         
         .quiz-card {
             background: #FFFFFF;
-            border: 1px solid #D9B68C;
-            border-left: 5px solid #C65D3B;
+            border: 1px solid #E2E8F0;
+            border-left: 5px solid #334155;
             border-radius: 16px;
             padding: 26px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 20px -2px rgba(198, 93, 59, 0.1);
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
         }
         
         .evaluator-card {
-            background: #FFF8F0;
-            border: 1px dashed #F2C94C;
+            background: #F8FAFC;
+            border: 1px dashed #CBD5E1;
             border-radius: 12px;
             padding: 18px;
             margin-top: 15px;
         }
         
         .stTextInput>div>div>input {
-            background-color: #FFFBF7 !important;
-            color: #2C1A0E !important;
-            border: 1px solid #D9B68C !important;
+            background-color: #FFFFFF !important;
+            color: #111827 !important;
+            border: 1px solid #CBD5E1 !important;
             border-radius: 10px !important;
         }
         .stSelectbox>div>div>div {
-            background-color: #FFFBF7 !important;
-            color: #2C1A0E !important;
-            border: 1px solid #D9B68C !important;
+            background-color: #FFFFFF !important;
+            color: #111827 !important;
+            border: 1px solid #CBD5E1 !important;
             border-radius: 10px !important;
         }
         .stForm {
             background: #FFFFFF !important;
-            border: 1px solid #D9B68C !important;
+            border: 1px solid #E2E8F0 !important;
             border-radius: 16px !important;
             padding: 24px !important;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
         }
         
         .stButton>button {
-            background: linear-gradient(90deg, #FF6F20 0%, #C65D3B 100%) !important;
+            background: linear-gradient(90deg, #1F2937 0%, #475569 100%) !important;
             color: white !important;
             border: none !important;
             border-radius: 9999px !important;
@@ -136,15 +137,15 @@ if st.session_state.theme == "light":
             text-transform: uppercase !important;
             letter-spacing: 0.06em !important;
             transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(255, 111, 32, 0.3) !important;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.16) !important;
         }
         .stButton>button:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(255, 111, 32, 0.45) !important;
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.24) !important;
         }
         
         .stDownloadButton>button {
-            background: linear-gradient(90deg, #F2C94C 0%, #A65E2E 100%) !important;
+            background: linear-gradient(90deg, #64748B 0%, #94A3B8 100%) !important;
             color: white !important;
             border: none !important;
             border-radius: 9999px !important;
@@ -152,15 +153,15 @@ if st.session_state.theme == "light":
             font-weight: 600 !important;
             font-family: 'Inter', sans-serif !important;
             transition: all 0.3s ease !important;
-            box-shadow: 0 4px 14px rgba(242, 201, 76, 0.3) !important;
+            box-shadow: 0 4px 14px rgba(100, 116, 139, 0.24) !important;
         }
         .stDownloadButton>button:hover {
             transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(242, 201, 76, 0.45) !important;
+            box-shadow: 0 6px 20px rgba(100, 116, 139, 0.34) !important;
         }
         
         div[data-testid="stMarkdownContainer"] p {
-            color: #4A2E18 !important;
+            color: #334155 !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -170,20 +171,20 @@ else:
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         
         .stApp {
-            background: linear-gradient(135deg, #1A0F07 0%, #2C1810 100%);
+            background: linear-gradient(135deg, #0B1120 0%, #111827 100%);
             font-family: 'Inter', sans-serif;
-            color: #F5E6D0;
+            color: #E5E7EB;
         }
         
         /* Overrides for Night Eye Mode */
         .stApp p, .stApp span, .stApp label, .stApp li {
-            color: #D9B68C !important;
+            color: #CBD5E1 !important;
         }
         
         .main-title {
             font-size: 3.2rem;
             font-weight: 800;
-            background: linear-gradient(90deg, #FF6F20 0%, #F2C94C 100%);
+            background: linear-gradient(90deg, #E5E7EB 0%, #94A3B8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 0.5rem;
@@ -191,11 +192,11 @@ else:
         }
         
         section[data-testid="stSidebar"] {
-            background-color: #150A04 !important;
-            border-right: 1px solid #3D2010 !important;
+            background-color: #0F172A !important;
+            border-right: 1px solid #1F2937 !important;
         }
         section[data-testid="stSidebar"] .stMarkdown p {
-            color: #D9B68C !important;
+            color: #CBD5E1 !important;
         }
         
         .badge {
@@ -208,28 +209,28 @@ else:
             display: inline-block;
         }
         .badge-beginner {
-            background-color: rgba(255,111,32,0.12) !important;
-            color: #FF8C42 !important;
-            border: 1px solid rgba(255,111,32,0.3) !important;
+            background-color: rgba(148,163,184,0.12) !important;
+            color: #E5E7EB !important;
+            border: 1px solid rgba(148,163,184,0.22) !important;
         }
         .badge-intermediate {
-            background-color: rgba(242,201,76,0.12) !important;
-            color: #F2C94C !important;
-            border: 1px solid rgba(242,201,76,0.3) !important;
+            background-color: rgba(100,116,139,0.12) !important;
+            color: #E5E7EB !important;
+            border: 1px solid rgba(100,116,139,0.22) !important;
         }
         
         .lesson-card {
-            background: #2C1810;
-            border: 1px solid #3D2010;
-            border-left: 5px solid #FF6F20;
+            background: #0F172A;
+            border: 1px solid #1F2937;
+            border-left: 5px solid #475569;
             border-radius: 16px;
             padding: 26px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
         }
         .lesson-card h4, .lesson-card h1, .lesson-card h2, .lesson-card h3 {
             font-family: 'Playfair Display', serif;
-            color: #F5E6D0 !important;
+            color: #F8FAFC !important;
             text-transform: uppercase;
             letter-spacing: 0.04em;
         }
@@ -237,42 +238,42 @@ else:
             font-family: 'Playfair Display', Georgia, serif;
             font-size: 1.05rem;
             line-height: 1.65;
-            color: #D9B68C !important;
+            color: #CBD5E1 !important;
         }
         
         .quiz-card {
-            background: #2C1810;
-            border: 1px solid #3D2010;
-            border-left: 5px solid #C65D3B;
+            background: #0F172A;
+            border: 1px solid #1F2937;
+            border-left: 5px solid #334155;
             border-radius: 16px;
             padding: 26px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
         }
         
         .evaluator-card {
-            background: rgba(255,111,32,0.08);
-            border: 1px dashed rgba(242,201,76,0.4);
+            background: rgba(148,163,184,0.08);
+            border: 1px dashed rgba(148,163,184,0.26);
             border-radius: 12px;
             padding: 18px;
             margin-top: 15px;
         }
         
         .stTextInput>div>div>input {
-            background-color: #150A04 !important;
-            color: #F5E6D0 !important;
-            border: 1px solid #3D2010 !important;
+            background-color: #0F172A !important;
+            color: #F8FAFC !important;
+            border: 1px solid #1F2937 !important;
             border-radius: 10px !important;
         }
         .stSelectbox>div>div>div {
-            background-color: #150A04 !important;
-            color: #F5E6D0 !important;
-            border: 1px solid #3D2010 !important;
+            background-color: #0F172A !important;
+            color: #F8FAFC !important;
+            border: 1px solid #1F2937 !important;
             border-radius: 10px !important;
         }
         .stForm {
-            background: #2C1810 !important;
-            border: 1px solid #3D2010 !important;
+            background: #0F172A !important;
+            border: 1px solid #1F2937 !important;
             border-radius: 16px !important;
             padding: 24px !important;
             box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
@@ -313,7 +314,7 @@ else:
         }
         
         div[data-testid="stMarkdownContainer"] p {
-            color: #D9B68C !important;
+            color: #CBD5E1 !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -413,6 +414,16 @@ if "concept_stage" not in st.session_state:
     st.session_state.concept_stage = "lesson"
 if "review_concept" not in st.session_state:
     st.session_state.review_concept = None
+if "focus_mode" not in st.session_state:
+    st.session_state.focus_mode = None
+if "focus_started_at" not in st.session_state:
+    st.session_state.focus_started_at = None
+if "focus_ends_at" not in st.session_state:
+    st.session_state.focus_ends_at = None
+if "focus_duration_minutes" not in st.session_state:
+    st.session_state.focus_duration_minutes = None
+if "focus_label" not in st.session_state:
+    st.session_state.focus_label = None
 
 def reset_session():
     st.session_state.state = None
@@ -430,6 +441,11 @@ def reset_session():
     st.session_state.smart_flashcards = []
     st.session_state.concept_stage = "lesson"
     st.session_state.review_concept = None
+    st.session_state.focus_mode = None
+    st.session_state.focus_started_at = None
+    st.session_state.focus_ends_at = None
+    st.session_state.focus_duration_minutes = None
+    st.session_state.focus_label = None
 
 def reset_concept_flow(clear_explanation: bool = True):
     if clear_explanation:
@@ -443,6 +459,75 @@ def reset_concept_flow(clear_explanation: bool = True):
     st.session_state.smart_flashcards = []
     st.session_state.concept_stage = "lesson"
     st.session_state.review_concept = None
+    st.session_state.focus_mode = None
+    st.session_state.focus_started_at = None
+    st.session_state.focus_ends_at = None
+    st.session_state.focus_duration_minutes = None
+    st.session_state.focus_label = None
+
+def start_focus_session(minutes: int, label: str) -> None:
+    now = time.time()
+    st.session_state.focus_mode = "active"
+    st.session_state.focus_started_at = now
+    st.session_state.focus_ends_at = now + (minutes * 60)
+    st.session_state.focus_duration_minutes = minutes
+    st.session_state.focus_label = label
+
+def remaining_focus_seconds() -> int:
+    if not st.session_state.get("focus_ends_at"):
+        return 0
+    return max(0, int(st.session_state.focus_ends_at - time.time()))
+
+def aura_status(completed: int, total: int) -> tuple[str, str]:
+    if total <= 0 or completed <= 0:
+        return "Initiation", "Starting point"
+    ratio = completed / total
+    if ratio < 0.25:
+        return "Spark", "Momentum building"
+    if ratio < 0.5:
+        return "Flow", "Steady progress"
+    if ratio < 0.8:
+        return "Orbit", "Strong rhythm"
+    if ratio < 1:
+        return "Zenith", "Near mastery"
+    return "Crown", "Topic complete"
+
+def build_focus_timer_html(remaining_seconds: int, total_seconds: int, label: str) -> str:
+    minutes = max(0, remaining_seconds // 60)
+    seconds = max(0, remaining_seconds % 60)
+    progress = 0 if total_seconds <= 0 else max(0, min(100, ((total_seconds - remaining_seconds) / total_seconds) * 100))
+    return f"""
+    <div style="font-family: Inter, sans-serif; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; box-shadow: 0 8px 24px rgba(15,23,42,0.08);">
+        <div style="font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #64748b; margin-bottom: 6px;">Kairu</div>
+        <div style="font-size: 15px; color: #0f172a; font-weight: 600; margin-bottom: 10px;">{label}</div>
+        <div id="kairu-time" style="font-size: 40px; line-height: 1; color: #111827; font-weight: 700; letter-spacing: -0.04em;">{minutes:02d}:{seconds:02d}</div>
+        <div style="margin-top: 14px; height: 10px; background: #e2e8f0; border-radius: 999px; overflow: hidden;">
+            <div id="kairu-bar" style="height: 100%; width: {progress}%; background: #334155; border-radius: 999px;"></div>
+        </div>
+        <div id="kairu-status" style="margin-top: 12px; font-size: 12px; color: #64748b;">Stay focused. One session at a time.</div>
+    </div>
+    <script>
+      let remaining = {remaining_seconds};
+      const timeEl = document.getElementById('kairu-time');
+      const barEl = document.getElementById('kairu-bar');
+      const statusEl = document.getElementById('kairu-status');
+      const total = {total_seconds};
+      function render() {{
+        const mins = String(Math.floor(Math.max(0, remaining) / 60)).padStart(2, '0');
+        const secs = String(Math.max(0, remaining) % 60).padStart(2, '0');
+        timeEl.textContent = `${{mins}}:${{secs}}`;
+        const pct = total <= 0 ? 0 : Math.max(0, Math.min(100, ((total - Math.max(0, remaining)) / total) * 100));
+        barEl.style.width = pct + '%';
+        if (remaining <= 0) {{
+          statusEl.textContent = 'Session complete. Take a short break.';
+          clearInterval(timer);
+        }}
+        remaining -= 1;
+      }}
+      render();
+      const timer = setInterval(render, 1000);
+    </script>
+    """
 
 def parse_flashcards(text: str):
     """Extracts flashcards from tutor's output based on [FLASHCARD] tags."""
@@ -474,8 +559,8 @@ def parse_flashcards(text: str):
     return clean_explanation, flashcards
 
 # Sidebar Design
-st.sidebar.markdown("<h2 style='margin-top: 5px; margin-bottom: 0px;'>🎓 StudyBuddy</h2>", unsafe_allow_html=True)
-st.sidebar.caption("Multi-Agent Adaptive Tutor")
+st.sidebar.markdown("<h2 style='margin-top: 5px; margin-bottom: 0px;'>NOVA</h2>", unsafe_allow_html=True)
+st.sidebar.caption("Adaptive study workspace")
 st.sidebar.write("---")
 
 # Theme selector button (Night Eye / Light Mode)
@@ -494,6 +579,17 @@ if st.session_state.state:
     st.sidebar.markdown(f"**Current Level:** <span class='badge {level_class}'>{level.upper()}</span>", unsafe_allow_html=True)
     st.sidebar.write(f"**Topic:** {state['topic']}")
     st.sidebar.write("---")
+
+    completed_count = len(state.get("completed", []))
+    total_count = len(state.get("subconcepts", []))
+    aura_name, aura_note = aura_status(completed_count, total_count)
+    aura_pct = completed_count / total_count if total_count else 0.0
+
+    st.sidebar.markdown("### Aura Tracker")
+    st.sidebar.metric("Topics completed", f"{completed_count}/{total_count}")
+    st.sidebar.progress(aura_pct)
+    st.sidebar.caption(f"**Aura:** {aura_name} - {aura_note}")
+    st.sidebar.write("---")
     
     # Progress path rendering
     st.sidebar.markdown("### 🗺️ Learning Path")
@@ -508,6 +604,45 @@ if st.session_state.state:
         else:
             st.sidebar.write(f"⚪ {concept}")
             
+    st.sidebar.write("---")
+
+    st.sidebar.markdown("### Kairu Focus")
+    focus_col_a, focus_col_b = st.sidebar.columns(2)
+    with focus_col_a:
+        if st.button("30 min", key="focus_30_min"):
+            start_focus_session(30, "Focused 30")
+            st.rerun()
+    with focus_col_b:
+        if st.button("5 min", key="focus_5_min"):
+            start_focus_session(5, "Quick 5")
+            st.rerun()
+
+    if st.session_state.get("focus_ends_at"):
+        remaining = remaining_focus_seconds()
+        total_seconds = int((st.session_state.focus_duration_minutes or 0) * 60)
+        focus_label = st.session_state.focus_label or "Focus Session"
+        if remaining <= 0:
+            st.success("Kairu session complete. Take a short break.")
+        else:
+            import streamlit.components.v1 as components
+            components.html(
+                build_focus_timer_html(remaining, total_seconds, focus_label),
+                height=190,
+            )
+        stop_col_a, stop_col_b = st.sidebar.columns(2)
+        with stop_col_a:
+            if st.button("Reset", key="focus_reset"):
+                st.session_state.focus_mode = None
+                st.session_state.focus_started_at = None
+                st.session_state.focus_ends_at = None
+                st.session_state.focus_duration_minutes = None
+                st.session_state.focus_label = None
+                st.rerun()
+        with stop_col_b:
+            if st.button("Sync", key="focus_sync"):
+                st.rerun()
+    else:
+        st.sidebar.caption("Start a 30 minute deep-work block or a 5 minute sprint.")
     st.sidebar.write("---")
     
     # Add Slides presentation generator download
@@ -535,11 +670,11 @@ if st.session_state.state:
         st.rerun()
 
 # Main Panel Design
-st.markdown("<h1 class='main-title' style='margin-top: 5px;'>🎓 StudyBuddy: Adaptive Learning</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 class='main-title' style='margin-top: 5px;'>NOVA: Adaptive Learning</h1>", unsafe_allow_html=True)
 
 if not st.session_state.state:
     # Setup Page
-    st.write("Welcome to StudyBuddy — your intelligent Autumn-powered tutor. Enter a topic or upload a PDF textbook chapter below, and our AI agents will craft a personalized learning path that adapts to your pace in real time.")
+    st.write("Welcome to NOVA — a calm, focused study space. Enter a topic or upload a PDF chapter below, and NOVA will shape a personalized learning path that adapts to your pace in real time.")
     
     # Mode Selection
     mode = st.radio("Choose how you want to learn:", ["Study by Topic Name", "Study from an uploaded PDF Document"])
@@ -805,15 +940,15 @@ else:
 </head>
 <body>
     <div class="certificate-container">
-        <div class="title">StudyBuddy</div>
+        <div class="title">NOVA</div>
         <div class="subtitle">Certificate of Completion</div>
         <div class="presented-to">This is proudly presented to the scholar who mastered</div>
-        <div class="student-name">StudyBuddy Graduate</div>
+        <div class="student-name">NOVA Graduate</div>
         <div class="course-name">Course Topic: <strong>{state['topic']}</strong></div>
         <div class="badge">Final Score: {score}/10 (Passed)</div>
         <div class="date-signature">
             <div class="item">Date Issued</div>
-            <div class="item">StudyBuddy Adaptive Agent</div>
+            <div class="item">NOVA Adaptive Agent</div>
         </div>
     </div>
 </body>
