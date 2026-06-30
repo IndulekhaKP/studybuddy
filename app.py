@@ -45,12 +45,19 @@ if st.session_state.theme == "light":
             background-color: #FFFFFF !important;
             border-right: 1px solid #E2E8F0 !important;
         }
+        section[data-testid="stSidebar"] .stMarkdown h1,
+        section[data-testid="stSidebar"] .stMarkdown h2,
+        section[data-testid="stSidebar"] .stMarkdown h3,
+        section[data-testid="stSidebar"] .stMarkdown h4 {
+            color: #0F172A !important;
+        }
         section[data-testid="stSidebar"] .stMarkdown p {
             color: #334155 !important;
         }
         section[data-testid="stSidebar"] .stButton>button,
         section[data-testid="stSidebar"] .stDownloadButton>button {
-            color: #F8FAFC !important;
+            color: #0F172A !important;
+            background: #E2E8F0 !important;
         }
         
         .badge {
@@ -134,7 +141,7 @@ if st.session_state.theme == "light":
         }
         
         .stButton>button {
-            background: linear-gradient(90deg, #1F2937 0%, #475569 100%) !important;
+            background: #334155 !important;
             color: #F8FAFC !important;
             border: none !important;
             border-radius: 9999px !important;
@@ -152,7 +159,7 @@ if st.session_state.theme == "light":
         }
         
         .stDownloadButton>button {
-            background: linear-gradient(90deg, #64748B 0%, #94A3B8 100%) !important;
+            background: #64748B !important;
             color: #F8FAFC !important;
             border: none !important;
             border-radius: 9999px !important;
@@ -205,12 +212,19 @@ else:
             background-color: #0F172A !important;
             border-right: 1px solid #1F2937 !important;
         }
+        section[data-testid="stSidebar"] .stMarkdown h1,
+        section[data-testid="stSidebar"] .stMarkdown h2,
+        section[data-testid="stSidebar"] .stMarkdown h3,
+        section[data-testid="stSidebar"] .stMarkdown h4 {
+            color: #F8FAFC !important;
+        }
         section[data-testid="stSidebar"] .stMarkdown p {
             color: #CBD5E1 !important;
         }
         section[data-testid="stSidebar"] .stButton>button,
         section[data-testid="stSidebar"] .stDownloadButton>button {
-            color: #F8FAFC !important;
+            color: #0F172A !important;
+            background: #E2E8F0 !important;
         }
         
         .badge {
@@ -294,8 +308,8 @@ else:
         }
         
         .stButton>button {
-            background: linear-gradient(90deg, #FF6F20 0%, #C65D3B 100%) !important;
-            color: #F8FAFC !important;
+            background: #E2E8F0 !important;
+            color: #0F172A !important;
             border: none !important;
             border-radius: 9999px !important;
             padding: 10px 24px !important;
@@ -312,7 +326,7 @@ else:
         }
         
         .stDownloadButton>button {
-            background: linear-gradient(90deg, #F2C94C 0%, #A65E2E 100%) !important;
+            background: #CBD5E1 !important;
             color: #F8FAFC !important;
             border: none !important;
             border-radius: 9999px !important;
@@ -573,7 +587,10 @@ def parse_flashcards(text: str):
     return clean_explanation, flashcards
 
 # Sidebar Design
-st.sidebar.markdown("<h2 style='margin-top: 5px; margin-bottom: 0px;'>NOVA</h2>", unsafe_allow_html=True)
+st.sidebar.markdown(
+    "<h2 style='margin-top: 5px; margin-bottom: 0px;'>🐉 NOVA</h2>",
+    unsafe_allow_html=True
+)
 st.sidebar.caption("Adaptive study workspace")
 st.sidebar.write("---")
 
@@ -660,24 +677,6 @@ if st.session_state.state:
     st.sidebar.write("---")
     
     # Add Slides presentation generator download
-    st.sidebar.markdown("### 🖥️ Slide Presentation")
-    if not st.session_state.slides_html:
-        if st.sidebar.button("⚙️ Generate Slides Summary"):
-            with st.spinner("Generating slide deck summary..."):
-                slide_context = state.get("pdf_text") or f"Topic: {state['topic']}\nCurriculum Path: {', '.join(state['subconcepts'])}"
-                slides_data = orchestrator.get_presentation_slides(slide_context)
-                from core.presentation import generate_html_slides
-                st.session_state.slides_html = generate_html_slides(slides_data)
-                st.rerun()
-    else:
-        st.sidebar.download_button(
-            label="📥 Download HTML Slideshow",
-            data=st.session_state.slides_html,
-            file_name="lesson_presentation.html",
-            mime="text/html"
-        )
-        st.sidebar.write("---")
-            
     st.sidebar.caption(f"Session: `{state['session_id']}`")
     if st.sidebar.button("🔄 Study New Topic"):
         reset_session()
@@ -1187,7 +1186,7 @@ else:
             st.download_button(
                 label="📥 Download Mistake Flashcards (HTML)",
                 data=st.session_state.flashcards_html,
-                file_name="studybuddy_mistake_flashcards.html",
+                file_name="nova_mistake_flashcards.html",
                 mime="text/html"
             )
         elif correct_count == total_qs_done:
