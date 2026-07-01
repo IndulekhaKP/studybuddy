@@ -1,6 +1,7 @@
 import os
 import time
 import re
+import base64
 from urllib.parse import quote_plus
 import streamlit as st
 from dotenv import load_dotenv
@@ -13,9 +14,23 @@ load_dotenv()
 if "theme" not in st.session_state:
     st.session_state.theme = "light"
 
+def load_file_base64(path: str) -> str | None:
+    if not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
+
+WALLPAPER_B64 = load_file_base64("wallpaper.jpg")
+WALLPAPER_CSS_URL = (
+    f"url('data:image/jpeg;base64,{WALLPAPER_B64}')"
+    if WALLPAPER_B64
+    else "none"
+)
+
 # Inject theme CSS dynamically based on light/dark mode selection
 if st.session_state.theme == "light":
-    st.markdown("""
+    st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         :root {
@@ -34,13 +49,16 @@ if st.session_state.theme == "light":
         .stApp {
             background-color: #F4F7FB;
             background-image:
-                linear-gradient(rgba(255,255,255,0.58), rgba(255,255,255,0.58)),
+                linear-gradient(rgba(255,255,255,0.66), rgba(255,255,255,0.66)),
+                {WALLPAPER_CSS_URL},
                 radial-gradient(circle at 18% 16%, rgba(191,219,254,0.42), transparent 24%),
                 radial-gradient(circle at 84% 14%, rgba(196,181,253,0.18), transparent 20%),
                 radial-gradient(circle at 60% 82%, rgba(148,163,184,0.12), transparent 24%),
                 linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px),
                 linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px);
-            background-size: auto, auto, auto, auto, 26px 26px, 26px 26px;
+            background-size: cover, cover, auto, auto, auto, 26px 26px, 26px 26px;
+            background-position: center center, center center, center, center, center, center, center;
+            background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat;
             font-family: 'Inter', sans-serif;
             color: var(--nova-text);
         }
@@ -189,7 +207,7 @@ if st.session_state.theme == "light":
     </style>
     """, unsafe_allow_html=True)
 else:
-    st.markdown("""
+    st.markdown(f"""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         :root {
@@ -208,13 +226,16 @@ else:
         .stApp {
             background-color: #0B1120;
             background-image:
-                linear-gradient(rgba(11,17,32,0.34), rgba(11,17,32,0.34)),
+                linear-gradient(rgba(11,17,32,0.42), rgba(11,17,32,0.42)),
+                {WALLPAPER_CSS_URL},
                 radial-gradient(circle at 16% 18%, rgba(96,165,250,0.12), transparent 24%),
                 radial-gradient(circle at 84% 10%, rgba(167,139,250,0.12), transparent 18%),
                 radial-gradient(circle at 70% 82%, rgba(148,163,184,0.10), transparent 20%),
                 linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px),
                 linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px);
-            background-size: auto, auto, auto, auto, 26px 26px, 26px 26px;
+            background-size: cover, cover, auto, auto, auto, 26px 26px, 26px 26px;
+            background-position: center center, center center, center, center, center, center, center;
+            background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat, repeat;
             font-family: 'Inter', sans-serif;
             color: var(--nova-text);
         }
