@@ -2,6 +2,8 @@ import os
 import time
 import re
 import base64
+import random
+import mimetypes
 from urllib.parse import quote_plus
 import streamlit as st
 from dotenv import load_dotenv
@@ -20,11 +22,29 @@ def load_file_base64(path: str) -> str | None:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
+def pick_random_wallpaper(folder: str = "wallapapers") -> tuple[str | None, str | None]:
+    if not os.path.isdir(folder):
+        return None, None
+    candidates = [
+        os.path.join(folder, name)
+        for name in os.listdir(folder)
+        if name.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))
+    ]
+    if not candidates:
+        return None, None
+    chosen = random.choice(candidates)
+    with open(chosen, "rb") as f:
+        payload = base64.b64encode(f.read()).decode("utf-8")
+    mime = mimetypes.guess_type(chosen)[0] or "image/jpeg"
+    return payload, mime
 
-WALLPAPER_B64 = load_file_base64("wallpaper.jpg")
+if "wallpaper_choice" not in st.session_state:
+    st.session_state.wallpaper_choice = pick_random_wallpaper()
+
+WALLPAPER_B64, WALLPAPER_MIME = st.session_state.wallpaper_choice
 WALLPAPER_CSS_URL = (
-    f"url('data:image/jpeg;base64,{WALLPAPER_B64}')"
-    if WALLPAPER_B64
+    f"url('data:{WALLPAPER_MIME};base64,{WALLPAPER_B64}')"
+    if WALLPAPER_B64 and WALLPAPER_MIME
     else "none"
 )
 

@@ -160,7 +160,7 @@ app.py top-to-bottom:
 - `Kairu Focus`: 30-minute and 5-minute focus sessions with a countdown display, pause/resume controls, and a left-side sticky rail
 - `Cozy Rain`: built-in study ambience player with play/pause controls in the sidebar
 - `Cozy Study Music`: local looping MP3 player wired to `liecio-calming-rain-257596.mp3`
-- Wallpaper background: `wallpaper.jpg` is used as the main canvas background with preserved aspect ratio
+- Wallpaper background: a random image from `wallapapers/` is used as the main canvas background with preserved aspect ratio
 - Slide presentation download was removed from the sidebar
 - Mistake flashcard download now appears in the review step, not the sidebar
 - Lesson explanations now end with reading and YouTube search links for the current concept
