@@ -1,7 +1,6 @@
 import os
 import time
 import re
-import base64
 from urllib.parse import quote_plus
 import streamlit as st
 from dotenv import load_dotenv
@@ -33,7 +32,15 @@ if st.session_state.theme == "light":
         }
         
         .stApp {
-            background: var(--nova-bg);
+            background-color: #F4F7FB;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.58), rgba(255,255,255,0.58)),
+                radial-gradient(circle at 18% 16%, rgba(191,219,254,0.42), transparent 24%),
+                radial-gradient(circle at 84% 14%, rgba(196,181,253,0.18), transparent 20%),
+                radial-gradient(circle at 60% 82%, rgba(148,163,184,0.12), transparent 24%),
+                linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px),
+                linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px);
+            background-size: auto, auto, auto, auto, 26px 26px, 26px 26px;
             font-family: 'Inter', sans-serif;
             color: var(--nova-text);
         }
@@ -199,7 +206,15 @@ else:
         }
         
         .stApp {
-            background: var(--nova-bg);
+            background-color: #0B1120;
+            background-image:
+                linear-gradient(rgba(11,17,32,0.34), rgba(11,17,32,0.34)),
+                radial-gradient(circle at 16% 18%, rgba(96,165,250,0.12), transparent 24%),
+                radial-gradient(circle at 84% 10%, rgba(167,139,250,0.12), transparent 18%),
+                radial-gradient(circle at 70% 82%, rgba(148,163,184,0.10), transparent 20%),
+                linear-gradient(90deg, rgba(148,163,184,0.08) 1px, transparent 1px),
+                linear-gradient(rgba(148,163,184,0.08) 1px, transparent 1px);
+            background-size: auto, auto, auto, auto, 26px 26px, 26px 26px;
             font-family: 'Inter', sans-serif;
             color: var(--nova-text);
         }
@@ -614,69 +629,11 @@ def build_focus_timer_html(remaining_seconds: int, total_seconds: int, label: st
     </script>
     """
 
-def build_music_player_html(audio_b64: str) -> str:
-    return """
-    <div style="font-family: Inter, sans-serif; background: #FFFFFF; border: 1px solid #DBEAFE; border-radius: 18px; padding: 16px; box-shadow: 0 12px 28px rgba(59,130,246,0.10);">
-        <div style="font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #64748B; margin-bottom: 6px;">Cozy Study Music</div>
-        <div style="font-size: 15px; font-weight: 700; color: #111827; margin-bottom: 10px;">Tokyo Funk Loop</div>
-        <div style="font-size: 12px; color: #64748B; margin-bottom: 12px;">Press play for a looping study track while you read.</div>
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom: 12px;">
-            <button id="music-play" style="background:#DBEAFE;color:#111827;border:1px solid #BFDBFE;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;">Play</button>
-            <button id="music-stop" style="background:#F8FAFC;color:#111827;border:1px solid #BFDBFE;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;">Pause</button>
-        </div>
-        <div style="height:8px;background:#E2E8F0;border-radius:999px;overflow:hidden;">
-            <div id="music-bar" style="width:0%;height:100%;background:#60A5FA;border-radius:999px;"></div>
-        </div>
-        <audio id="study-audio" loop preload="auto">
-            <source src="data:audio/mpeg;base64,{{AUDIO_B64}}" type="audio/mpeg">
-        </audio>
-    </div>
-    <script>
-      const playBtn = document.getElementById('music-play');
-      const stopBtn = document.getElementById('music-stop');
-      const bar = document.getElementById('music-bar');
-      const audio = document.getElementById('study-audio');
-      let playing = false;
-
-      async function startMusic() {
-        if (playing) return;
-        try {
-          await audio.play();
-        } catch (e) {
-          return;
-        }
-        playing = true;
-        playBtn.textContent = 'Playing';
-        bar.style.width = '100%';
-        bar.style.opacity = '0.8';
-      }
-
-      function stopMusic() {
-        audio.pause();
-        audio.currentTime = 0;
-        playing = false;
-        playBtn.textContent = 'Play';
-        bar.style.width = '0%';
-        bar.style.opacity = '1';
-      }
-
-      playBtn.addEventListener('click', async () => {
-        if (!playing) {
-          await startMusic();
-        }
-      });
-
-      stopBtn.addEventListener('click', () => {
-        stopMusic();
-      });
-    </script>
-    """.replace("{{AUDIO_B64}}", audio_b64)
-
-def load_music_base64(path: str) -> str | None:
+def load_music_bytes(path: str) -> bytes | None:
     if not os.path.exists(path):
         return None
     with open(path, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
+        return f.read()
 
 def normalize_lesson_math(text: str) -> str:
     if not text:
@@ -726,10 +683,11 @@ if st.sidebar.button(theme_btn_label, key="theme_toggle_btn"):
     st.rerun()
 st.sidebar.write("---")
 
-music_b64 = load_music_base64("liecio-calming-rain-257596.mp3")
-if music_b64:
-    import streamlit.components.v1 as components
-    components.html(build_music_player_html(music_b64), height=240)
+music_bytes = load_music_bytes("liecio-calming-rain-257596.mp3")
+if music_bytes:
+    st.sidebar.markdown("### Cozy Study Music")
+    st.sidebar.audio(music_bytes, format="audio/mp3", loop=True)
+    st.sidebar.caption("Use the built-in controls to play or pause the loop.")
     st.sidebar.write("---")
 else:
     st.sidebar.caption("Music file not found: `liecio-calming-rain-257596.mp3`")
