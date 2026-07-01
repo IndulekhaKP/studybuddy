@@ -30,7 +30,7 @@ WALLPAPER_CSS_URL = (
 
 # Inject theme CSS dynamically based on light/dark mode selection
 if st.session_state.theme == "light":
-    st.markdown(f"""
+    st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         :root {
@@ -50,7 +50,7 @@ if st.session_state.theme == "light":
             background-color: #F4F7FB;
             background-image:
                 linear-gradient(rgba(255,255,255,0.66), rgba(255,255,255,0.66)),
-                {WALLPAPER_CSS_URL},
+                __WALLPAPER__,
                 radial-gradient(circle at 18% 16%, rgba(191,219,254,0.42), transparent 24%),
                 radial-gradient(circle at 84% 14%, rgba(196,181,253,0.18), transparent 20%),
                 radial-gradient(circle at 60% 82%, rgba(148,163,184,0.12), transparent 24%),
@@ -205,9 +205,9 @@ if st.session_state.theme == "light":
             color: var(--nova-muted) !important;
         }
     </style>
-    """, unsafe_allow_html=True)
+    """.replace("__WALLPAPER__", WALLPAPER_CSS_URL), unsafe_allow_html=True)
 else:
-    st.markdown(f"""
+    st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@300;400;500;600;700&display=swap');
         :root {
@@ -227,7 +227,7 @@ else:
             background-color: #0B1120;
             background-image:
                 linear-gradient(rgba(11,17,32,0.42), rgba(11,17,32,0.42)),
-                {WALLPAPER_CSS_URL},
+                __WALLPAPER__,
                 radial-gradient(circle at 16% 18%, rgba(96,165,250,0.12), transparent 24%),
                 radial-gradient(circle at 84% 10%, rgba(167,139,250,0.12), transparent 18%),
                 radial-gradient(circle at 70% 82%, rgba(148,163,184,0.10), transparent 20%),
@@ -382,7 +382,7 @@ else:
             color: var(--nova-muted) !important;
         }
     </style>
-    """, unsafe_allow_html=True)
+    """.replace("__WALLPAPER__", WALLPAPER_CSS_URL), unsafe_allow_html=True)
 
 # Safety check for Groq API key
 api_key = os.getenv("GROQ_API_KEY")
