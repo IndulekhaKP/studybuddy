@@ -22,7 +22,7 @@ def load_file_base64(path: str) -> str | None:
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-def pick_random_wallpaper(folder: str = "wallapapers") -> tuple[str | None, str | None]:
+def pick_random_wallpaper(folder: str) -> tuple[str | None, str | None]:
     if not os.path.isdir(folder):
         return None, None
     candidates = [
@@ -38,10 +38,8 @@ def pick_random_wallpaper(folder: str = "wallapapers") -> tuple[str | None, str 
     mime = mimetypes.guess_type(chosen)[0] or "image/jpeg"
     return payload, mime
 
-if "wallpaper_choice" not in st.session_state:
-    st.session_state.wallpaper_choice = pick_random_wallpaper()
-
-WALLPAPER_B64, WALLPAPER_MIME = st.session_state.wallpaper_choice
+wallpaper_folder = "day wallapapers" if st.session_state.theme == "light" else "night wallapapers"
+WALLPAPER_B64, WALLPAPER_MIME = pick_random_wallpaper(wallpaper_folder)
 WALLPAPER_CSS_URL = (
     f"url('data:{WALLPAPER_MIME};base64,{WALLPAPER_B64}')"
     if WALLPAPER_B64 and WALLPAPER_MIME
