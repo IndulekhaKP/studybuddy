@@ -728,7 +728,6 @@ st.sidebar.write("---")
 
 music_b64 = load_music_base64("liecio-calming-rain-257596.mp3")
 if music_b64:
-    st.sidebar.markdown("### Cozy Study Music")
     import streamlit.components.v1 as components
     components.html(build_music_player_html(music_b64), height=240)
     st.sidebar.write("---")
@@ -776,13 +775,6 @@ if focus_active_or_paused:
             st.rerun()
 else:
     st.sidebar.caption("Start a 30 minute deep-work block or a 5 minute sprint.")
-
-st.sidebar.write("---")
-
-st.sidebar.markdown("### Cozy Study Music")
-import streamlit.components.v1 as components
-components.html(build_music_player_html(music_b64) if music_b64 else "<div></div>", height=240)
-st.sidebar.write("---")
 
 if st.session_state.state:
     state = st.session_state.state
